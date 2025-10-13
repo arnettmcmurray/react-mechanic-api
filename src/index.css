@@ -1,0 +1,54 @@
+body {
+  font-family: sans-serif;
+  margin: 0;
+  background: #f6f6f6;
+  color: #222;
+}
+
+.navbar {
+  background: #222;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar a {
+  color: white;
+  margin-left: 10px;
+  text-decoration: none;
+}
+
+.view {
+  padding: 2rem;
+  max-width: 600px;
+  margin: auto;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+button {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #555;
+}
+
+button.danger {
+  background: #a00;
+}
+
+button.danger:hover {
+  background: #d00;
+}
