@@ -1,54 +1,164 @@
+/* === Global === */
 body {
-  font-family: sans-serif;
   margin: 0;
-  background: #f6f6f6;
-  color: #222;
+  font-family: "Courier New", monospace;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
 }
 
+:root {
+  --bg: #f6f6f6;
+  --text: #222;
+  --nav-bg: #222;
+  --nav-text: #fff;
+}
+
+[data-theme="dark"] {
+  --bg: #111;
+  --text: #eee;
+  --nav-bg: #000;
+  --nav-text: #0f0;
+}
+
+/* === Navbar === */
 .navbar {
-  background: #222;
-  color: white;
-  padding: 10px 20px;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  padding: 0.8rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.navbar a {
-  color: white;
-  margin-left: 10px;
+.nav-left a,
+.nav-right a {
+  color: var(--nav-text);
   text-decoration: none;
+  margin: 0 0.75rem;
+  font-weight: bold;
 }
 
-.view {
-  padding: 2rem;
-  max-width: 600px;
-  margin: auto;
+.nav-left a:hover,
+.nav-right a:hover {
+  text-decoration: underline;
 }
 
+.nav-center {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.app-title {
+  margin: 0;
+  color: var(--nav-text);
+  font-size: 1.25rem;
+  letter-spacing: 0.5px;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-btn {
+  background: none;
+  border: 1px solid var(--nav-text);
+  color: var(--nav-text);
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.nav-btn:hover {
+  background: var(--nav-text);
+  color: var(--nav-bg);
+}
+
+/* === Login/Register === */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 1rem;
+  width: 320px;
+  margin: 3rem auto;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  border: 2px solid var(--nav-text);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #0004;
 }
 
-button {
-  background: #333;
-  color: white;
+.form input {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #111;
+  border: 1px solid #0f0;
+  color: #0f0;
+  font-family: "Courier New", monospace;
+}
+
+.form button {
+  background: #0f0;
+  color: #111;
   border: none;
-  padding: 8px;
+  padding: 0.5rem;
+  font-weight: bold;
   cursor: pointer;
+  transition: 0.2s;
 }
 
-button:hover {
-  background: #555;
+.form button:hover {
+  background: #4f4;
 }
 
-button.danger {
-  background: #a00;
+/* === Cards === */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  padding: 2rem;
 }
 
-button.danger:hover {
-  background: #d00;
+.card {
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  padding: 1.5rem;
+  box-shadow: 0 0 6px #0003;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+/* === General view spacing === */
+.view {
+  padding: 2rem;
+  text-align: center;
+}
+
+/* === Theme Toggle === */
+.theme-toggle {
+  margin-left: 1rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--nav-text);
+  border-radius: 4px;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.theme-toggle:hover {
+  background: var(--nav-text);
+  color: var(--nav-bg);
 }
