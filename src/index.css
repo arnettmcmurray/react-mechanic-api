@@ -12,13 +12,17 @@ body {
   --text: #222;
   --nav-bg: #222;
   --nav-text: #fff;
+  --card-bg: #eee;
+  --accent: #0f0;
 }
 
 [data-theme="dark"] {
-  --bg: #111;
-  --text: #eee;
+  --bg: #0b0b0b;
+  --text: #e8e8e8;
   --nav-bg: #000;
   --nav-text: #0f0;
+  --card-bg: #1b1b1b;
+  --accent: #4f4;
 }
 
 /* === Navbar === */
@@ -80,15 +84,32 @@ body {
   color: var(--nav-bg);
 }
 
-/* === Login/Register === */
+/* === Home / Demo === */
+.home-view {
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.demo-login-box {
+  margin: 2rem auto;
+  width: 320px;
+  background: var(--card-bg);
+  border: 2px solid var(--nav-text);
+  border-radius: 8px;
+  padding: 1.5rem;
+  color: var(--text);
+  box-shadow: 0 0 10px #0004;
+}
+
+/* === Form === */
 .form {
   display: flex;
   flex-direction: column;
   width: 320px;
   margin: 3rem auto;
-  background: var(--nav-bg);
-  color: var(--nav-text);
-  border: 2px solid var(--nav-text);
+  background: var(--card-bg);
+  color: var(--text);
+  border: 2px solid var(--accent);
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 0 10px #0004;
@@ -97,15 +118,15 @@ body {
 .form input {
   margin-bottom: 1rem;
   padding: 0.5rem;
-  background: #111;
-  border: 1px solid #0f0;
-  color: #0f0;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--text);
   font-family: "Courier New", monospace;
 }
 
 .form button {
-  background: #0f0;
-  color: #111;
+  background: var(--accent);
+  color: var(--nav-bg);
   border: none;
   padding: 0.5rem;
   font-weight: bold;
@@ -114,35 +135,7 @@ body {
 }
 
 .form button:hover {
-  background: #4f4;
-}
-
-/* === Cards === */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  padding: 2rem;
-}
-
-.card {
-  border: 1px solid #444;
-  border-radius: 6px;
-  background: var(--nav-bg);
-  color: var(--nav-text);
-  padding: 1.5rem;
-  box-shadow: 0 0 6px #0003;
-  transition: transform 0.2s;
-}
-
-.card:hover {
-  transform: translateY(-4px);
-}
-
-/* === General view spacing === */
-.view {
-  padding: 2rem;
-  text-align: center;
+  filter: brightness(1.2);
 }
 
 /* === Theme Toggle === */

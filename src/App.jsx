@@ -1,14 +1,15 @@
 import { Outlet, Link } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "./context/AuthContext";
-import "./App.css"; // now actually used for layout fixes
+import "./App.css";
 
 const App = () => {
   const { mechanic, logout } = useContext(AuthContext);
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
 
+  // === Fix: apply theme to <html>, not body ===
   useEffect(() => {
-    document.body.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
 
@@ -49,7 +50,7 @@ const App = () => {
         </div>
       </nav>
 
-      <div className="home-view">
+      <main className="home-view">
         <h1>Welcome to the Mechanic Workshop Portal</h1>
         <p>Register, log in, and manage your mechanic profile.</p>
 
@@ -62,7 +63,7 @@ const App = () => {
             Password: <strong>admin123</strong>
           </p>
         </div>
-      </div>
+      </main>
 
       <Outlet />
     </div>
