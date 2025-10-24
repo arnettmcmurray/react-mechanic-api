@@ -2,13 +2,25 @@
 
 ## 🚗 Overview
 
+=======
+
+<
 This React app serves as the front-end for the **Mechanic Workshop API**, a full-stack CRUD system built with Flask and React.  
 It allows mechanics to:
 
 - Register and log in
 - View and edit profiles
 - Manage tickets
-- Toggle between light and dark mode
+- # Toggle between light and dark mode
+
+This React app serves as the front-end for the **Mechanic Workshop API**, a full-stack CRUD system built with Flask and React.  
+It allows mechanics to:
+
+- Register and log in
+- View and edit profiles
+- Manage tickets
+
+=======
 
 This project connects directly to the live Flask API hosted on **Render**.  
 No local backend setup required — just start the React app.
@@ -16,6 +28,8 @@ No local backend setup required — just start the React app.
 ---
 
 ## 🧩 Tech Stack
+
+=======
 
 - **React + Vite**
 - **React Router DOM**
@@ -30,6 +44,7 @@ No local backend setup required — just start the React app.
 
 The app automatically connects to the live backend:
 https://mechanics-api.onrender.com
+=======
 
 yaml
 Copy code
@@ -47,14 +62,25 @@ Use these credentials to log in and test CRUD functionality:
 | Admin    | admin@shop.com | admin123    |
 | Mechanic | alex@shop.com  | password123 |
 
-> These accounts are seeded automatically on the Render database.  
-> If Render resets, you can recreate them via the backend `/mechanics/create` endpoint.
+=======
+
+Use these credentials to log in and test CRUD functionality:
+
+| Role     | Email          | Password    |
+| -------- | -------------- | ----------- |
+| Admin    | admin@shop.com | admin123    |
+| Mechanic | alex@shop.com  | password123 |
+
+=======
 
 ---
 
 ## 🧠 Run Locally
 
-````bash
+=======
+
+=======
+
 npm install
 npm run dev
 Visit:
@@ -90,33 +116,41 @@ Copy code
 ---
 
 ### ✅ Quick Home page edit (`src/views/Home.jsx`)
+
 Add this little note to make grading obvious:
 
-```jsx
 import MechanicCard from "../components/MechanicCard";
 
 const demoMechanics = [
-  {
-    name: "Admin Mechanic",
-    specialty: "Full Diagnostics",
-    status: "Available",
-    ticketCount: 2,
-    onDuty: true,
-  },
-  {
-    name: "Alex Rivera",
-    specialty: "Brake Systems",
-    status: "Active",
-    ticketCount: 3,
-    onDuty: true,
-  },
+{
+name: "Admin Mechanic",
+specialty: "Full Diagnostics",
+status: "Available",
+ticketCount: 2,
+onDuty: true,
+},
+{
+name: "Alex Rivera",
+specialty: "Brake Systems",
+status: "Active",
+ticketCount: 3,
+onDuty: true,
+},
 ];
 
 export default function Home() {
-  return (
-    <div className="view">
-      <h1>Mechanic Workshop Portal</h1>
-      <p>
+return (
+
+<div className="view">
+<h1>Mechanic Workshop Portal</h1>
+<p>
+
+=======
+
+        <strong>Demo Login for Grading:</strong>
+
+=======
+
         <strong>Demo Login for Grading:</strong>
         Email: <code>admin@shop.com</code> | Password: <code>admin123</code>
       </p>
@@ -127,6 +161,6 @@ export default function Home() {
         ))}
       </div>
     </div>
-  );
+
+);
 }
-````

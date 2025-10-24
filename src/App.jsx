@@ -1,7 +1,7 @@
 import { Outlet, Link } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "./context/AuthContext";
-import "./index.css";
+import "./App.css"; // now actually used for layout fixes
 
 const App = () => {
   const { mechanic, logout } = useContext(AuthContext);
@@ -13,7 +13,7 @@ const App = () => {
   }, [theme]);
 
   return (
-    <div>
+    <div id="root-container">
       <nav className="navbar">
         <div className="nav-left">
           <Link to="/">Home</Link>
@@ -44,10 +44,25 @@ const App = () => {
             className="nav-btn theme-toggle"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           >
-            {theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"}
+            {theme === "light" ? "🌙 Dark" : "☀️ Light"}
           </button>
         </div>
       </nav>
+
+      <div className="home-view">
+        <h1>Welcome to the Mechanic Workshop Portal</h1>
+        <p>Register, log in, and manage your mechanic profile.</p>
+
+        <div className="demo-login-box">
+          <h3>🔐 Demo Admin Login</h3>
+          <p>
+            Email: <strong>admin@shop.com</strong>
+          </p>
+          <p>
+            Password: <strong>admin123</strong>
+          </p>
+        </div>
+      </div>
 
       <Outlet />
     </div>
