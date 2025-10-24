@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-
-const baseURL =
-  import.meta.env.MODE === "development"
-    ? "http://127.0.0.1:5000"
-    : "https://mechanics-api.onrender.com";
+import api from "../api/api.js";
 
 const MyTickets = () => {
   const [tickets, setTickets] = useState([]);
@@ -13,16 +8,16 @@ const MyTickets = () => {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const tokenData = JSON.parse(localStorage.getItem("mechanic"));
-        if (!tokenData?.token) {
+        const stored = JSON.parse(localStorage.getItem("mechanic"));
+        if (!stored?.token) {
           setError("No token found. Please log in again.");
           return;
         }
 
-        const res = await axios.post(
-          `${baseURL}/mechanics/my_tickets`,
+        const res = await api.post(
+          "/mechanics/my_tickets",
           {},
-          { headers: { Authorization: `Bearer ${tokenData.token}` } }
+          { headers: { Authorization: `Bearer ${stored.token}` } }
         );
         if (Array.isArray(res.data)) setTickets(res.data);
         else if (res.data.message) setError(res.data.message);

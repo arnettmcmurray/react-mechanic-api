@@ -27,16 +27,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // === Login mechanic ===
+  // === Login mechanic (token + profile fetch) ===
   const login = async (credentials) => {
     setLoading(true);
     setError(null);
     try {
       const res = await api.post("/mechanics/login", credentials);
-      localStorage.setItem("mechanic", JSON.stringify(res.data));
-      setMechanic(res.data);
+      const token = res.data?.token;
+      if (!token) throw new Error("No token received");
+
+      // === fetch mechanic details ===
+      const detailRes = await api.post(
+        "/mechanics/profile",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const mechData = detailRes.data;
+      const fullData = { ...mechData, token };
+      localStorage.setItem("mechanic", JSON.stringify(fullData));
+      setMechanic(fullData);
       setLoading(false);
-      return res.data;
+      return fullData;
     } catch (err) {
       setLoading(false);
       const msg = err.response?.data?.message || "Login failed.";
@@ -56,8 +68,12 @@ export const AuthProvider = ({ children }) => {
     if (!mechanic) return alert("You must be logged in.");
     setLoading(true);
     try {
-      const res = await api.put(`/mechanics/${mechanic.id}`, formData);
-      const updated = res.data;
+      const res = await api.put(
+        "/mechanics/update",
+        { id: mechanic.id, ...formData },
+        { headers: { Authorization: `Bearer ${mechanic.token}` } }
+      );
+      const updated = res.data.mechanic || mechanic;
       setMechanic(updated);
       localStorage.setItem("mechanic", JSON.stringify(updated));
       setLoading(false);
@@ -78,7 +94,10 @@ export const AuthProvider = ({ children }) => {
       return;
     setLoading(true);
     try {
-      await api.delete(`/mechanics/${mechanic.id}`);
+      await api.delete("/mechanics/delete", {
+        data: { id: mechanic.id },
+        headers: { Authorization: `Bearer ${mechanic.token}` },
+      });
       logout();
       setLoading(false);
       alert("Profile deleted.");
@@ -90,7 +109,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // === Context values ===
   const value = {
     mechanic,
     loading,

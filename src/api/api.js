@@ -1,20 +1,15 @@
-import axios from "axios"; // src/api/api.js
-// === Handles all API requests for local & production ===
+import axios from "axios";
 
-// === Detect environment ===
-const isLocal = window.location.hostname === "localhost";
+const hostname = window.location.hostname;
+const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
 
-// === Base URL setup ===
 export const API_BASE_URL = isLocal
-  ? "http://127.0.0.1:5000" // local dev
-  : "https://mechanics-api.onrender.com"; // production on Render
+  ? "http://127.0.0.1:5000" // must match Flask’s address exactly
+  : "https://mechanics-api.onrender.com";
 
-// === Axios instance ===
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
 // === Optional endpoints map ===

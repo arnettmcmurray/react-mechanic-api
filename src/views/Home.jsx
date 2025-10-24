@@ -1,61 +1,52 @@
-// === Home.jsx ===
 import { useEffect, useState } from "react";
 import MechanicCard from "../components/MechanicCard";
 import api from "../api/api.js";
 
 export default function Home() {
-  const [mechanics, setMechanics] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [error, setError] = useState("");
 
-  // === Fetch mechanics from backend ===
   useEffect(() => {
-    const fetchMechanics = async () => {
+    const fetchTickets = async () => {
       try {
-        const res = await api.get("/mechanics/all");
-        // if backend returns list, use that — else fallback
-        if (Array.isArray(res.data) && res.data.length) {
-          setMechanics(res.data);
-        } else {
-          // fallback demo data if API empty
-          setMechanics([
-            {
-              name: "Cliff Torque",
-              specialty: "Turbocharger Whisperer",
-              status: "Busy",
-              ticketCount: 3,
-              onDuty: true,
-            },
-            {
-              name: "Lenny Sparks",
-              specialty: "Certified Duct Tape Engineer",
-              status: "Available",
-              ticketCount: 1,
-              onDuty: true,
-            },
-            {
-              name: "Pam Piston",
-              specialty: "Grease Philosopher",
-              status: "Off Duty",
-              ticketCount: 4,
-              onDuty: false,
-            },
-          ]);
+        const stored = JSON.parse(localStorage.getItem("mechanic"));
+        const token = stored?.token;
+        if (!token) {
+          setError("No token found. Log in first.");
+          return;
         }
+        const res = await api.post(
+          "/service_tickets/get_all",
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (Array.isArray(res.data)) setTickets(res.data);
+        else if (res.data.message) setError(res.data.message);
       } catch (err) {
-        console.error("Error fetching mechanics:", err);
+        console.error("Error fetching tickets:", err);
+        setError("Could not load tickets.");
       }
     };
-
-    fetchMechanics();
+    fetchTickets();
   }, []);
 
   return (
     <div className="view">
-      <h1>Mechanic Dashboard</h1>
-      <p>Active mechanics and their current status</p>
-
+      <h1>All Service Tickets</h1>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {!error && tickets.length === 0 && <p>No tickets found.</p>}
       <div className="card-grid">
-        {mechanics.map((m, i) => (
-          <MechanicCard key={i} mechanic={m} />
+        {tickets.map((t) => (
+          <MechanicCard
+            key={t.id}
+            mechanic={{
+              name: `Ticket #${t.id}`,
+              specialty: t.description,
+              status: t.status,
+              ticketCount: t.customer_id,
+              onDuty: t.status === "Open",
+            }}
+          />
         ))}
       </div>
     </div>
