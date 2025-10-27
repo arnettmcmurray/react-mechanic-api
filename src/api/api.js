@@ -4,15 +4,16 @@ const hostname = window.location.hostname;
 const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
 
 export const API_BASE_URL = isLocal
-  ? "http://127.0.0.1:5000" // must match Flask’s address exactly
-  : "https://mechanics-api.onrender.com";
+  ? "http://127.0.0.1:5000"
+  : "https://mechanics-api.onrender.com"; // Render backend URL
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-// === Optional endpoints map ===
 export const API_ENDPOINTS = {
   login: "/mechanics/login",
   register: "/mechanics/create",
@@ -21,5 +22,4 @@ export const API_ENDPOINTS = {
   delete: "/mechanics/delete",
 };
 
-// === Default export for use in AuthContext ===
 export default api;

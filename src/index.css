@@ -1,12 +1,4 @@
-/* === Global === */
-body {
-  margin: 0;
-  font-family: "Courier New", monospace;
-  background: var(--bg);
-  color: var(--text);
-  transition: background 0.3s, color 0.3s;
-}
-
+/* === Global Theme === */
 :root {
   --bg: #f6f6f6;
   --text: #222;
@@ -25,8 +17,20 @@ body {
   --accent: #4f4;
 }
 
+/* === Base Reset === */
+body {
+  margin: 0;
+  font-family: "Courier New", monospace;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
+}
+
 /* === Navbar === */
 .navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -34,17 +38,24 @@ body {
   background: var(--nav-bg);
   color: var(--nav-text);
   padding: 0.8rem 2rem;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  border-bottom: 2px solid var(--accent);
+  z-index: 1000;
+}
+
+.app-title {
+  color: var(--nav-text);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.3rem;
+  letter-spacing: 0.5px;
 }
 
 .nav-left a,
 .nav-right a {
   color: var(--nav-text);
   text-decoration: none;
-  margin: 0 0.75rem;
   font-weight: bold;
+  margin: 0 0.75rem;
 }
 
 .nav-left a:hover,
@@ -52,67 +63,56 @@ body {
   text-decoration: underline;
 }
 
-.nav-center {
-  flex-grow: 1;
-  text-align: center;
-}
-
-.app-title {
-  margin: 0;
-  color: var(--nav-text);
-  font-size: 1.25rem;
-  letter-spacing: 0.5px;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.nav-btn {
+.nav-btn,
+.theme-toggle {
   background: none;
   border: 1px solid var(--nav-text);
   color: var(--nav-text);
-  padding: 0.3rem 0.7rem;
+  padding: 0.4rem 0.8rem;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 5px;
+  transition: 0.2s;
 }
 
-.nav-btn:hover {
+.nav-btn:hover,
+.theme-toggle:hover {
   background: var(--nav-text);
   color: var(--nav-bg);
 }
 
-/* === Home / Demo === */
-.home-view {
-  padding: 3rem 1rem;
+/* === Page Container === */
+#root-container {
+  padding-top: 80px;
   text-align: center;
+}
+
+/* === Home Section === */
+.home-view {
+  padding: 2rem 1rem;
 }
 
 .demo-login-box {
   margin: 2rem auto;
-  width: 320px;
+  max-width: 350px;
   background: var(--card-bg);
-  border: 2px solid var(--nav-text);
-  border-radius: 8px;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
   padding: 1.5rem;
   color: var(--text);
-  box-shadow: 0 0 10px #0004;
+  box-shadow: 0 0 15px #0005;
 }
 
-/* === Form === */
+/* === Forms === */
 .form {
   display: flex;
   flex-direction: column;
   width: 320px;
   margin: 3rem auto;
   background: var(--card-bg);
-  color: var(--text);
   border: 2px solid var(--accent);
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 0 10px #0004;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 0 10px #0005;
 }
 
 .form input {
@@ -136,49 +136,4 @@ body {
 
 .form button:hover {
   filter: brightness(1.2);
-}
-
-/* === Theme Toggle === */
-.theme-toggle {
-  margin-left: 1rem;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.9rem;
-  border: 1px solid var(--nav-text);
-  border-radius: 4px;
-  background: var(--nav-bg);
-  color: var(--nav-text);
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.theme-toggle:hover {
-  background: var(--nav-text);
-  color: var(--nav-bg);
-}
-/* === Navbar Fix === */
-.navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background: var(--nav-bg);
-  color: var(--nav-text);
-  padding: 0.8rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-sizing: border-box;
-  z-index: 1000;
-  border-bottom: 2px solid var(--accent);
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding-right: 1rem; /* ensures toggle isn’t chopped */
-}
-
-#root-container {
-  padding-top: 70px; /*space below fixed navbar */
 }

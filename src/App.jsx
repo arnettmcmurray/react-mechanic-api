@@ -1,4 +1,4 @@
-import { Outlet, Link } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "./context/AuthContext";
 import "./App.css";
@@ -7,7 +7,6 @@ const App = () => {
   const { mechanic, logout } = useContext(AuthContext);
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
 
-  // === Fix: apply theme to <html>, not body ===
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
@@ -15,13 +14,12 @@ const App = () => {
 
   return (
     <div id="root-container">
+      {/* === Navbar === */}
       <nav className="navbar">
         <div className="nav-left">
-          <Link to="/">Home</Link>
-        </div>
-
-        <div className="nav-center">
-          <h2 className="app-title">Mechanic Workshop</h2>
+          <Link to="/" className="app-title">
+            Mechanic Workshop
+          </Link>
         </div>
 
         <div className="nav-right">
@@ -34,22 +32,22 @@ const App = () => {
             <>
               <Link to="/profile">Profile</Link>
               <Link to="/edit-profile">Edit</Link>
-              <Link to="/my-tickets">My Tickets</Link>
+              <Link to="/my-tickets">Tickets</Link>
               <button className="nav-btn" onClick={logout}>
                 Logout
               </button>
             </>
           )}
-
           <button
-            className="nav-btn theme-toggle"
+            className="theme-toggle"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           >
-            {theme === "light" ? "🌙 Dark" : "☀️ Light"}
+            {theme === "light" ? "🌙 Dark" : "☀ Light"}
           </button>
         </div>
       </nav>
 
+      {/* === Main View === */}
       <main className="home-view">
         <h1>Welcome to the Mechanic Workshop Portal</h1>
         <p>Register, log in, and manage your mechanic profile.</p>
@@ -63,9 +61,9 @@ const App = () => {
             Password: <strong>admin123</strong>
           </p>
         </div>
-      </main>
 
-      <Outlet />
+        <Outlet />
+      </main>
     </div>
   );
 };
