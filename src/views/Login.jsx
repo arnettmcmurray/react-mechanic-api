@@ -1,47 +1,45 @@
-// === Login.jsx ===
-import { useState, useContext } from "react";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import "../index.css";
 
 export default function Login() {
-  const { login, loading } = useContext(AuthContext);
-  const [form, setForm] = useState({ email: "", password: "" });
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await login(form);
-    if (success) navigate("/profile");
+    try {
+      await login(email, password);
+      navigate("/profile");
+    } catch {
+      setError("Login failed. Please check your credentials.");
+    }
   };
 
   return (
     <div className="auth-container">
-      <form onSubmit={handleSubmit} className="auth-form">
-        <h2 className="auth-title">Login</h2>
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <h1>Login</h1>
+        {error && <p style={{ color: "red" }}>{error}</p>}
         <input
-          name="email"
           type="email"
           placeholder="Email"
-          onChange={handleChange}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           type="password"
-          name="password"
           placeholder="Password"
-          onChange={handleChange}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-
-        <p className="auth-switch">
-          Don’t have an account? <a href="/register">Register</a>
-        </p>
+        <button type="submit">Login</button>
       </form>
     </div>
   );

@@ -1,119 +1,70 @@
-import { createContext, useState } from "react";
-import api from "../api/api.js";
+import { createContext, useState, useContext } from "react";
+import { mechanicAPI } from "../api/api";
 
-export const AuthContext = createContext();
+// === Create Context ===
+const AuthContext = createContext();
 
+// === Auth Provider ===
 export const AuthProvider = ({ children }) => {
-  const [mechanic, setMechanic] = useState(
-    JSON.parse(localStorage.getItem("mechanic")) || null
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
 
-  // === Register mechanic ===
-  const register = async (formData) => {
-    setLoading(true);
-    setError(null);
+  // === Login ===
+  const login = async (email, password) => {
     try {
-      const res = await api.post("/mechanics/create", formData);
-      alert("Mechanic registered successfully!");
-      setLoading(false);
+      const res = await mechanicAPI.login({ email, password });
+      if (res.data && res.data.token) {
+        setUser(res.data);
+        setToken(res.data.token);
+        localStorage.setItem("token", res.data.token);
+      }
       return res.data;
     } catch (err) {
-      setLoading(false);
-      const msg = err.response?.data?.message || "Registration failed.";
-      setError(msg);
-      alert(msg);
+      console.error("Login failed:", err);
+      throw err;
     }
   };
 
-  // === Login mechanic (fetches full info from backend) ===
-  const login = async (credentials) => {
-    setLoading(true);
-    setError(null);
+  // === Register ===
+  const register = async (data) => {
     try {
-      const res = await api.post("/mechanics/login", credentials);
-      const { token, id, name, email, specialty } = res.data;
-      if (!token) throw new Error("No token received");
-
-      const fullData = { id, name, email, specialty, token };
-      localStorage.setItem("mechanic", JSON.stringify(fullData));
-      setMechanic(fullData);
-
-      alert("Login successful!");
-      setLoading(false);
-      return true; // success flag
+      const res = await mechanicAPI.register(data);
+      return res.data;
     } catch (err) {
-      setLoading(false);
-      const msg = err.response?.data?.message || "Login failed.";
-      setError(msg);
-      alert(msg);
-      return false; // failure flag
+      console.error("Registration failed:", err);
+      throw err;
     }
   };
 
-  // === Logout mechanic ===
+  // === Fetch Profile ===
+  const fetchProfile = async () => {
+    try {
+      const res = await mechanicAPI.profile(token);
+      setUser(res.data);
+      return res.data;
+    } catch (err) {
+      console.error("Profile fetch failed:", err);
+    }
+  };
+
+  // === Logout ===
   const logout = () => {
-    localStorage.removeItem("mechanic");
-    setMechanic(null);
+    setUser(null);
+    setToken("");
+    localStorage.removeItem("token");
   };
 
-  // === Update mechanic info ===
-  const updateMechanic = async (formData) => {
-    if (!mechanic) return alert("You must be logged in.");
-    setLoading(true);
-    try {
-      const res = await api.put(
-        "/mechanics/update",
-        { id: mechanic.id, ...formData },
-        { headers: { Authorization: `Bearer ${mechanic.token}` } }
-      );
-      const updated = res.data.mechanic || mechanic;
-      setMechanic(updated);
-      localStorage.setItem("mechanic", JSON.stringify(updated));
-      setLoading(false);
-      alert("Profile updated!");
-      return updated;
-    } catch (err) {
-      setLoading(false);
-      const msg = err.response?.data?.message || "Update failed.";
-      setError(msg);
-      alert(msg);
-    }
-  };
-
-  // === Delete mechanic ===
-  const deleteMechanic = async () => {
-    if (!mechanic) return alert("You must be logged in.");
-    if (!window.confirm("Are you sure you want to delete your profile?"))
-      return;
-    setLoading(true);
-    try {
-      await api.delete("/mechanics/delete", {
-        data: { id: mechanic.id },
-        headers: { Authorization: `Bearer ${mechanic.token}` },
-      });
-      logout();
-      setLoading(false);
-      alert("Profile deleted.");
-    } catch (err) {
-      setLoading(false);
-      const msg = err.response?.data?.message || "Delete failed.";
-      setError(msg);
-      alert(msg);
-    }
-  };
-
-  const value = {
-    mechanic,
-    loading,
-    error,
-    register,
-    login,
-    logout,
-    updateMechanic,
-    deleteMechanic,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{ user, token, login, register, fetchProfile, logout }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
+
+// === Custom Hook for Easy Use ===
+export const useAuth = () => useContext(AuthContext);
+
+// === Default Export (optional, for flexibility) ===
+export default AuthContext;

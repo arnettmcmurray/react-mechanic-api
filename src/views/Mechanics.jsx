@@ -1,7 +1,9 @@
 import { useContext, useState } from "react";
-import { AuthContext } from "../context/AuthContext";
+import AuthContext from "../context/AuthContext";
+import MechanicCard from "../components/MechanicCard";
+import MechanicForm from "../components/MechanicForm";
 
-export default function EditProfile() {
+export default function Mechanics() {
   const { mechanic, updateMechanic } = useContext(AuthContext);
   const [form, setForm] = useState({
     name: mechanic?.name || "",

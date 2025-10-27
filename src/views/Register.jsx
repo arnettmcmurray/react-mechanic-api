@@ -1,37 +1,50 @@
-import { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import "../index.css";
 
 export default function Register() {
-  const { register, loading } = useContext(AuthContext);
-  const [form, setForm] = useState({
+  const { register } = useAuth();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     specialty: "",
   });
+  const [error, setError] = useState("");
 
   const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    register(form);
+    try {
+      await register(formData);
+      navigate("/login");
+    } catch {
+      setError("Registration failed. Try again.");
+    }
   };
 
   return (
     <div className="auth-container">
-      <form onSubmit={handleSubmit} className="auth-form">
-        <h2 className="auth-title">Register</h2>
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <h1>Register Mechanic</h1>
+        {error && <p style={{ color: "red" }}>{error}</p>}
         <input
+          type="text"
           name="name"
           placeholder="Full Name"
+          value={formData.name}
           onChange={handleChange}
           required
         />
         <input
-          name="email"
           type="email"
+          name="email"
           placeholder="Email"
+          value={formData.email}
           onChange={handleChange}
           required
         />
@@ -39,22 +52,19 @@ export default function Register() {
           type="password"
           name="password"
           placeholder="Password"
+          value={formData.password}
           onChange={handleChange}
           required
         />
         <input
+          type="text"
           name="specialty"
           placeholder="Specialty"
+          value={formData.specialty}
           onChange={handleChange}
           required
         />
-        <button type="submit" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
-        </button>
-
-        <p className="auth-switch">
-          Already have an account? <a href="/login">Login</a>
-        </p>
+        <button type="submit">Register</button>
       </form>
     </div>
   );

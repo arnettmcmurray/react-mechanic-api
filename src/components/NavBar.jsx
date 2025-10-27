@@ -1,13 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
+import AuthContext from "../context/AuthContext";
 
 const NavBar = () => {
-  const { mechanic, logout } = useContext(AuthContext);
+  const { user, token, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
 
-  // === Theme toggle ===
   const toggleTheme = () => {
     const next = theme === "light" ? "dark" : "light";
     setTheme(next);
@@ -26,16 +25,14 @@ const NavBar = () => {
 
   return (
     <nav className="navbar">
-      {/* === Left side === */}
       <div className="nav-left">
         <Link to="/" className="app-title">
           Mechanic Workshop
         </Link>
       </div>
 
-      {/* === Right side === */}
       <div className="nav-right">
-        {!mechanic ? (
+        {!token ? (
           <>
             <Link to="/register" className="nav-link">
               Register
@@ -46,17 +43,23 @@ const NavBar = () => {
           </>
         ) : (
           <>
+            <Link to="/dashboard" className="nav-link">
+              Dashboard
+            </Link>
             <Link to="/profile" className="nav-link">
               Profile
             </Link>
             <Link to="/edit-profile" className="nav-link">
               Edit
             </Link>
-            <Link to="/my-tickets" className="nav-link">
+            <Link to="/tickets" className="nav-link">
               Tickets
             </Link>
+            <Link to="/inventory" className="nav-link">
+              Inventory
+            </Link>
             <button className="nav-btn" onClick={handleLogout}>
-              Logout
+              Logout ({user?.name || "Mechanic"})
             </button>
           </>
         )}
