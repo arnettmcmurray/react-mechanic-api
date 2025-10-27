@@ -27,33 +27,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // === Login mechanic (token + profile fetch) ===
+  // === Login mechanic (fetches full info from backend) ===
   const login = async (credentials) => {
     setLoading(true);
     setError(null);
     try {
       const res = await api.post("/mechanics/login", credentials);
-      const token = res.data?.token;
+      const { token, id, name, email, specialty } = res.data;
       if (!token) throw new Error("No token received");
 
-      // === fetch mechanic details ===
-      const detailRes = await api.post(
-        "/mechanics/profile",
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const mechData = detailRes.data;
-      const fullData = { ...mechData, token };
+      const fullData = { id, name, email, specialty, token };
       localStorage.setItem("mechanic", JSON.stringify(fullData));
       setMechanic(fullData);
+
+      alert("Login successful!");
       setLoading(false);
-      return fullData;
+      return true; // success flag
     } catch (err) {
       setLoading(false);
       const msg = err.response?.data?.message || "Login failed.";
       setError(msg);
       alert(msg);
+      return false; // failure flag
     }
   };
 
