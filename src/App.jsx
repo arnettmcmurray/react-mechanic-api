@@ -1,7 +1,8 @@
+// === App.jsx ===
 import { Link, Outlet } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "./context/AuthContext";
-import "./App.css";
+import "./index.css";
 
 const App = () => {
   const { mechanic, logout } = useContext(AuthContext);
@@ -14,7 +15,6 @@ const App = () => {
 
   return (
     <div id="root-container">
-      {/* === Navbar === */}
       <nav className="navbar">
         <div className="nav-left">
           <Link to="/" className="app-title">
@@ -47,17 +47,23 @@ const App = () => {
         </div>
       </nav>
 
-      {/* === Main View === */}
       <main className="home-view">
         <h1>Welcome to the Mechanic Workshop Portal</h1>
         <p>Register, log in, and manage your mechanic profile.</p>
 
         <div className="demo-login-box">
-          <h3>🔐 Demo Admin Login</h3>
+          <h3>🔧 Getting Started</h3>
           <p>
-            Email: <strong>admin@shop.com</strong>
+            Step 1: <strong>Register a mechanic account</strong>
           </p>
           <p>
+            Step 2: <strong>Log in</strong> with those same credentials
+          </p>
+          <p>
+            Example:
+            <br />
+            Email: <strong>admin@shop.com</strong>
+            <br />
             Password: <strong>admin123</strong>
           </p>
         </div>
