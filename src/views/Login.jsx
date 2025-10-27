@@ -1,3 +1,4 @@
+// === Login.jsx ===
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -13,21 +14,35 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const success = await login(form);
-    if (success) navigate("/profile"); // redirect after login
+    if (success) navigate("/profile");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form">
-      <input name="email" placeholder="Email" onChange={handleChange} />
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        onChange={handleChange}
-      />
-      <button type="submit" disabled={loading}>
-        {loading ? "Logging in..." : "Login"}
-      </button>
-    </form>
+    <div className="auth-container">
+      <form onSubmit={handleSubmit} className="auth-form">
+        <h2 className="auth-title">Login</h2>
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          onChange={handleChange}
+          required
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+
+        <p className="auth-switch">
+          Don’t have an account? <a href="/register">Register</a>
+        </p>
+      </form>
+    </div>
   );
 }

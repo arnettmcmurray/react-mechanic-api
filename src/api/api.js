@@ -3,9 +3,10 @@ import axios from "axios";
 const hostname = window.location.hostname;
 const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
 
-export const API_BASE_URL = isLocal
-  ? "http://127.0.0.1:5000"
-  : "https://mechanics-api.onrender.com"; // Render backend URL
+// export const API_BASE_URL = isLocal
+//  ? "http://127.0.0.1:5000"
+//  : "https://mechanics-api.onrender.com"; // Render backend URL
+export const API_BASE_URL = "https://mechanics-api.onrender.com";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

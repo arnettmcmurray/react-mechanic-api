@@ -10,7 +10,7 @@ const MyTickets = () => {
       try {
         const stored = JSON.parse(localStorage.getItem("mechanic"));
         if (!stored?.token) {
-          setError("No token found. Please log in again.");
+          setError("No tickets to show.");
           return;
         }
 
@@ -19,10 +19,15 @@ const MyTickets = () => {
           {},
           { headers: { Authorization: `Bearer ${stored.token}` } }
         );
-        if (Array.isArray(res.data)) setTickets(res.data);
-        else if (res.data.message) setError(res.data.message);
+
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setTickets(res.data);
+          setError("");
+        } else {
+          setError("No tickets to show.");
+        }
       } catch (err) {
-        setError(err.response?.data?.message || "Error fetching tickets");
+        setError("No tickets to show.");
       }
     };
 
@@ -30,17 +35,30 @@ const MyTickets = () => {
   }, []);
 
   return (
-    <div className="view">
+    <div className="home-view">
       <h2>My Tickets</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {!error && tickets.length === 0 && <p>No tickets assigned yet.</p>}
-      <ul>
-        {tickets.map((t) => (
-          <li key={t.id}>
-            <strong>{t.description}</strong> — {t.status}
-          </li>
-        ))}
-      </ul>
+      {error && <p>{error}</p>}
+      {tickets.length > 0 && (
+        <ul style={{ listStyle: "none", padding: 0 }}>
+          {tickets.map((t) => (
+            <li
+              key={t.id}
+              style={{
+                background: "var(--card-bg)",
+                border: "2px solid var(--accent)",
+                borderRadius: "8px",
+                padding: "1rem",
+                margin: "0.5rem auto",
+                width: "320px",
+              }}
+            >
+              <strong>{t.description}</strong>
+              <br />
+              Status: {t.status}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

@@ -1,166 +1,218 @@
-/* === THEME === */
-:root {
-  --bg: #f6f6f6;
-  --text: #222;
-  --nav-bg: #222;
-  --nav-text: #fff;
-  --card-bg: #eee;
-  --accent: #0f0;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, sans-serif;
 }
 
-[data-theme="dark"] {
-  --bg: #0b0b0b;
-  --text: #e8e8e8;
-  --nav-bg: #000;
-  --nav-text: #0f0;
-  --card-bg: #1b1b1b;
-  --accent: #4f4;
+/* === Theme Variables (retro style) === */
+:root[data-theme="light"] {
+  --bg: #f4f4f4;
+  --card: #ffffff;
+  --text: #111;
+  --accent: #00cc00;
+  --muted: #555;
 }
 
-/* === RESET === */
-html,
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --card: #0f0f0f;
+  --text: #00ff00;
+  --accent: #00ff00;
+  --muted: #4dff4d;
+}
+
+/* === Layout === */
 body,
+html,
 #root,
 #root-container {
   height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: "Courier New", monospace;
   background: var(--bg);
   color: var(--text);
-  transition: background 0.3s, color 0.3s;
 }
 
-/* === NAVBAR === */
+/* lowered forms slightly */
+.main-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100vh - 80px);
+  padding-top: 6rem;
+  padding-bottom: 2rem;
+}
+
+/* === Navbar === */
 .navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--nav-bg);
-  color: var(--nav-text);
-  padding: 0.8rem 2rem;
-  border-bottom: 2px solid var(--accent);
-  z-index: 1000;
+  padding: 1rem 2rem;
+  background-color: var(--card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--accent);
+  background-color: var(--bg);
 }
 
 .app-title {
-  color: var(--nav-text);
+  font-size: 1.5rem;
+  font-weight: 600;
   text-decoration: none;
-  font-weight: bold;
-  font-size: 1.3rem;
-  letter-spacing: 0.5px;
+  color: var(--accent);
 }
 
-.nav-left a,
-.nav-right a {
-  color: var(--nav-text);
-  text-decoration: none;
-  font-weight: bold;
-  margin: 0 0.75rem;
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.nav-left a:hover,
-.nav-right a:hover {
+.nav-link {
+  text-decoration: none;
+  color: var(--accent);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
   text-decoration: underline;
 }
 
-.nav-btn,
-.theme-toggle {
-  background: none;
-  border: 1px solid var(--nav-text);
-  color: var(--nav-text);
-  padding: 0.4rem 0.8rem;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: 0.2s;
-}
-
-.nav-btn:hover,
-.theme-toggle:hover {
-  background: var(--nav-text);
-  color: var(--nav-bg);
-}
-
-/* === MAIN === */
-#root-container {
-  padding-top: 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.home-view {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  min-height: calc(100vh - 100px);
-  width: 100%;
-}
-
-/* === INFO BOX === */
-.demo-login-box {
-  margin: 2rem auto;
-  max-width: 380px;
-  background: var(--card-bg);
-  border: 2px solid var(--accent);
-  border-radius: 10px;
-  padding: 1.5rem;
-  color: var(--text);
-  box-shadow: 0 0 15px #0005;
-}
-
-/* === FORM === */
-.form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 320px;
-  background: var(--card-bg);
-  border: 2px solid var(--accent);
-  border-radius: 10px;
-  padding: 1.5rem;
-  margin: 2rem auto;
-  box-shadow: 0 0 10px #0005;
-}
-
-.form input {
-  margin-bottom: 1rem;
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--accent);
-  background: transparent;
-  color: var(--text);
-  font-family: "Courier New", monospace;
-}
-
-.form button {
-  background: var(--accent);
-  color: var(--nav-bg);
+.nav-btn {
   border: none;
-  width: 100%;
-  padding: 0.6rem;
-  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
   cursor: pointer;
-  transition: 0.2s;
+  background: transparent;
+  color: var(--accent);
+  transition: opacity 0.2s ease;
 }
 
-.form button:hover {
-  filter: brightness(1.2);
+.nav-btn:hover {
+  text-decoration: underline;
 }
 
-/* === TEXT === */
-h1,
-h2,
-h3,
-p {
-  margin: 0.5rem 0;
-  line-height: 1.4;
+.theme-toggle {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.15);
+}
+
+/* === Auth Screens === */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 4rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  background: var(--card);
+  border: 1px solid var(--accent);
+  color: var(--text);
+}
+
+.auth-title {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+.auth-form input {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.auth-form input:focus {
+  outline: 2px solid var(--accent);
+  border-color: var(--accent);
+}
+
+.auth-form button {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--accent);
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.auth-form button:hover {
+  opacity: 0.9;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.auth-switch a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* === Center the view container === */
+.view-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* vertically centers */
+  align-items: center; /* horizontally centers */
+  width: 100%;
+  max-width: 800px;
+  background: var(--card);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  margin: 4rem auto; /* centers the container horizontally */
+}
+
+/* === Utility === */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.demo-card {
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 1rem 2rem;
+  margin: 2rem auto; /* auto margins center the card */
+  background: var(--card);
+  color: var(--text);
+  text-align: center;
+  width: 90%; /* responsive width */
+  max-width: 500px;
+  box-sizing: border-box;
 }

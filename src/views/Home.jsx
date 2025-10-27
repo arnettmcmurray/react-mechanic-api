@@ -1,24 +1,22 @@
-import { useEffect, useState } from "react";
+// === Home.jsx ===
+import { useEffect, useState, useContext } from "react";
 import MechanicCard from "../components/MechanicCard";
 import api from "../api/api.js";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Home() {
+  const { mechanic } = useContext(AuthContext);
   const [tickets, setTickets] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!mechanic?.token) return; // only fetch if logged in
     const fetchTickets = async () => {
       try {
-        const stored = JSON.parse(localStorage.getItem("mechanic"));
-        const token = stored?.token;
-        if (!token) {
-          setError("No token found. Log in first.");
-          return;
-        }
         const res = await api.post(
           "/service_tickets/get_all",
           {},
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${mechanic.token}` } }
         );
         if (Array.isArray(res.data)) setTickets(res.data);
         else if (res.data.message) setError(res.data.message);
@@ -28,13 +26,45 @@ export default function Home() {
       }
     };
     fetchTickets();
-  }, []);
+  }, [mechanic]);
 
+  // === If logged out ===
+  if (!mechanic) {
+    return (
+      <div className="view-container">
+        <h1>Welcome to the Mechanic Workshop Portal</h1>
+        <p>Register or log in to manage your mechanic profile.</p>
+
+        <div className="demo-card">
+          <h3>🔧 Demo Mechanic</h3>
+          <p>
+            <strong>Name:</strong> Alex Wrench
+          </p>
+          <p>
+            <strong>Specialty:</strong> Engine Repair
+          </p>
+          <p>
+            <strong>Status:</strong> 🟢 On Duty
+          </p>
+        </div>
+
+        <p className="auth-switch">
+          New here? <strong>Register</strong> a mechanic account, then{" "}
+          <strong>Log in</strong> to start.
+        </p>
+      </div>
+    );
+  }
+
+  // === Logged in ===
   return (
-    <div className="view">
-      <h1>All Service Tickets</h1>
+    <div className="view-container">
+      <h1>Welcome back, {mechanic.name}!</h1>
+      <p>Your current tickets:</p>
+
       {error && <p style={{ color: "red" }}>{error}</p>}
-      {!error && tickets.length === 0 && <p>No tickets found.</p>}
+      {!error && tickets.length === 0 && <p>No active service tickets yet.</p>}
+
       <div className="card-grid">
         {tickets.map((t) => (
           <MechanicCard
