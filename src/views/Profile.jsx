@@ -10,12 +10,10 @@ export default function Profile() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  // === Load profile instantly ===
   useEffect(() => {
     if (user) setProfile(user);
   }, [user]);
 
-  // === Fetch tickets on mount ===
   useEffect(() => {
     if (!token) return;
     const fetchTickets = async () => {
@@ -29,14 +27,13 @@ export default function Profile() {
     fetchTickets();
   }, [token]);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
 
   const handleSave = async () => {
     try {
       await mechanicAPI.update({
-        id: profile.id, // this is required
+        id: profile.id,
         name: profile.name,
         email: profile.email,
         specialty: profile.specialty,
@@ -162,7 +159,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* === Mechanic Tickets Section === */}
       <section style={{ marginTop: "2rem", width: "100%" }}>
         <h2>Your Service Tickets</h2>
         {tickets.length > 0 ? (

@@ -1,19 +1,16 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useContext } from "react";
 import { mechanicAPI } from "../api/api";
 
-// === Create Context ===
 const AuthContext = createContext();
 
-// === Auth Provider ===
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || "");
 
-  // === Login ===
   const login = async (email, password) => {
     try {
       const res = await mechanicAPI.login({ email, password });
-      if (res.data && res.data.token) {
+      if (res.data?.token) {
         setUser(res.data);
         setToken(res.data.token);
         localStorage.setItem("token", res.data.token);
@@ -25,7 +22,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // === Register ===
   const register = async (data) => {
     try {
       const res = await mechanicAPI.register(data);
@@ -36,7 +32,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // === Fetch Profile ===
   const fetchProfile = async () => {
     try {
       const res = await mechanicAPI.profile(token);
@@ -47,7 +42,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // === Logout ===
   const logout = () => {
     setUser(null);
     setToken("");
@@ -63,5 +57,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// === Default Export (optional, for flexibility) ===
+// one-liner hook built right here
+export const useAuth = () => useContext(AuthContext);
+
 export default AuthContext;
