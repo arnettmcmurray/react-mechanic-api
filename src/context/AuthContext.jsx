@@ -1,4 +1,4 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useState } from "react";
 import { mechanicAPI } from "../api/api";
 
 // === Create Context ===
@@ -62,9 +62,6 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-// === Custom Hook for Easy Use ===
-export const useAuth = () => useContext(AuthContext);
 
 // === Default Export (optional, for flexibility) ===
 export default AuthContext;

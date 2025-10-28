@@ -22,6 +22,7 @@ function App() {
         <Route path="/edit-profile" element={<Edit />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/dump" element={<DataDump />} />
       </Routes>
     </BrowserRouter>
   );

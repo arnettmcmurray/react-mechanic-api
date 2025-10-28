@@ -35,11 +35,17 @@ export default function Profile() {
 
   const handleSave = async () => {
     try {
-      await mechanicAPI.update(profile.id, profile, token);
+      await mechanicAPI.update({
+        id: profile.id, // this is required
+        name: profile.name,
+        email: profile.email,
+        specialty: profile.specialty,
+      });
       setMessage("✅ Profile updated successfully!");
       setTimeout(() => setMessage(""), 3000);
-    } catch {
-      setError("Failed to update profile.");
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+      setError("❌ Failed to update profile.");
     }
   };
 
