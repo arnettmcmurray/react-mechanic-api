@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { mechanicAPI, ticketAPI } from "../api/api";
+import { mechanicAPI } from "../api/api";
 import "../index.css";
 
 export default function Profile() {
@@ -20,7 +20,7 @@ export default function Profile() {
     if (!token) return;
     const fetchTickets = async () => {
       try {
-        const res = await ticketAPI.getAll(token);
+        const res = await mechanicAPI.getMyTickets();
         setTickets(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Error fetching mechanic tickets:", err);
