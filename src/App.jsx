@@ -8,6 +8,7 @@ import Inventory from "./views/Inventory";
 import Edit from "./views/Edit";
 import Login from "./views/Login";
 import Register from "./views/Register";
+import Mechanics from "./views/Mechanics";
 
 function App() {
   return (
@@ -19,10 +20,10 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/inventory" element={<Inventory />} />
-        <Route path="/edit-profile" element={<Edit />} />
+        <Route path="/edit" element={<Edit />} />
+        <Route path="/mechanics" element={<Mechanics />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dump" element={<DataDump />} />
       </Routes>
     </BrowserRouter>
   );

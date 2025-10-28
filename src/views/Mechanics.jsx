@@ -1,23 +1,18 @@
-import { useContext, useState } from "react";
-import AuthContext from "../context/AuthContext.jsx";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Mechanics() {
-  const { mechanic, updateMechanic } = useContext(AuthContext);
+  const { user, token } = useAuth();
   const [form, setForm] = useState({
-    name: mechanic?.name || "",
-    email: mechanic?.email || "",
-    specialty: mechanic?.specialty || "",
+    name: user?.name || "",
+    email: user?.email || "",
+    specialty: user?.specialty || "",
   });
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    updateMechanic(form);
-  };
-
-  if (!mechanic)
+  if (!token)
     return (
       <div className="home-view">
         <h2>Please log in to edit your profile.</h2>
@@ -26,8 +21,8 @@ export default function Mechanics() {
 
   return (
     <div className="home-view">
-      <h2>Edit Profile</h2>
-      <form onSubmit={handleSubmit} className="form">
+      <h2>Edit Mechanic Info</h2>
+      <form className="form">
         <input
           name="name"
           placeholder="Name"

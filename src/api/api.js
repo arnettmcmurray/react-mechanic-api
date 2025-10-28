@@ -1,55 +1,70 @@
 import axios from "axios";
 
-// ⚙️ Local dev proxy (vite.config.js handles /api)
-const API_BASE =
-  import.meta.env.MODE === "development"
-    ? "/api"
-    : "https://mechanics-api.onrender.com";
+// === Base URL (local dev vs Render) ===
+const API_BASE = import.meta.env.DEV
+  ? "/api"
+  : "https://mechanics-api.onrender.com";
 
-// === Base Axios Instance ===
+// === Axios Instance ===
 const api = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
 });
 
-// === Auto attach token ===
+// === Auto-attach token ===
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// === 🧰 Mechanics ===
+// ==============================
+// === Mechanics Endpoints ======
+// ==============================
 export const mechanicAPI = {
   register: (data) => api.post("/mechanics/create", data),
   login: (data) => api.post("/mechanics/login", data),
-  getAll: () => api.post("/mechanics/get_all"),
-  getMyTickets: () => api.post("/mechanics/my_tickets"), // ← backend
+  getAll: () => api.post("/mechanics/get_all", {}),
+  getOne: (id) => api.post("/mechanics/get_one", { id }),
+  getMyTickets: () => api.post("/mechanics/my_tickets", {}),
   update: (data) => api.put("/mechanics/update", data),
-  delete: (data) => api.delete("/mechanics/delete", { data }),
+  delete: (id) => api.delete("/mechanics/delete", { data: { id } }),
 };
 
-// === 🧾 Service Tickets ===
+// ==============================
+// === Service Tickets =========
+// ==============================
 export const ticketAPI = {
   create: (data) => api.post("/service_tickets/create", data),
-  getAll: () => api.post("/service_tickets/get_all"),
+  getAll: () => api.post("/service_tickets/get_all", {}),
+  getOne: (ticket_id) => api.post("/service_tickets/get_one", { ticket_id }),
+  update: (data) => api.put("/service_tickets/update", data),
+  delete: (ticket_id) =>
+    api.delete("/service_tickets/delete", { data: { ticket_id } }),
   assignMechanic: (data) => api.post("/service_tickets/assign", data),
   addParts: (data) => api.post("/service_tickets/add_parts", data),
-  update: (data) => api.put("/service_tickets/update", data),
-  delete: (data) => api.delete("/service_tickets/delete", { data }),
 };
 
-// === 🧩 Inventory ===
+// ==============================
+// === Inventory (Parts) ========
+// ==============================
 export const inventoryAPI = {
-  getAll: () => api.post("/inventory/get_all"),
+  getAll: () => api.post("/inventory/get_all", {}),
+  getOne: (id) => api.post("/inventory/get_one", { id }),
   create: (data) => api.post("/inventory/create", data),
   update: (data) => api.put("/inventory/update", data),
-  delete: (data) => api.delete("/inventory/delete", { data }),
+  delete: (id) => api.delete("/inventory/delete", { data: { id } }),
 };
 
-// === 👥 Customers ===
+// ==============================
+// === Customers ===============
+// ==============================
 export const customerAPI = {
-  getAll: () => api.post("/customers/get_all"),
+  getAll: () => api.post("/customers/get_all", {}),
+  getOne: (email) => api.post("/customers/get_one", { email }),
+  create: (data) => api.post("/customers/create", data),
+  update: (data) => api.put("/customers/update", data),
+  delete: (id) => api.delete("/customers/delete", { data: { id } }),
 };
 
 export default api;

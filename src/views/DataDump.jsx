@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { mechanicAPI, customerAPI, inventoryAPI, ticketAPI } from "../api/api";
+import "../index.css";
 
 export default function DataDump() {
   const [data, setData] = useState({});
@@ -21,20 +22,38 @@ export default function DataDump() {
           tickets: tickets.data,
         });
       } catch (err) {
-        console.error(err);
-        setError("Failed to fetch data.");
+        console.error("Failed to fetch:", err);
+        setError("Could not load data.");
       }
     };
     fetchAll();
   }, []);
 
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+
   return (
-    <div style={{ padding: "1rem", color: "lime" }}>
-      <h1>🧠 Data Dump</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <pre style={{ background: "black", padding: "1rem" }}>
-        {JSON.stringify(data, null, 2)}
-      </pre>
+    <div className="view-container">
+      <h1>🧠 Data Dump (Live)</h1>
+
+      <section>
+        <h2>Mechanics</h2>
+        <pre>{JSON.stringify(data.mechanics, null, 2)}</pre>
+      </section>
+
+      <section>
+        <h2>Customers</h2>
+        <pre>{JSON.stringify(data.customers, null, 2)}</pre>
+      </section>
+
+      <section>
+        <h2>Inventory</h2>
+        <pre>{JSON.stringify(data.inventory, null, 2)}</pre>
+      </section>
+
+      <section>
+        <h2>Service Tickets</h2>
+        <pre>{JSON.stringify(data.tickets, null, 2)}</pre>
+      </section>
     </div>
   );
 }

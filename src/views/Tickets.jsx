@@ -13,10 +13,13 @@ export default function Tickets() {
     const fetchTickets = async () => {
       try {
         const res = await ticketAPI.getAll();
-        setTickets(Array.isArray(res.data) ? res.data : []);
+        console.log("Tickets fetched:", res.data);
+        if (Array.isArray(res.data)) setTickets(res.data);
+        else if (res.data?.tickets) setTickets(res.data.tickets);
+        else setTickets([]);
       } catch (err) {
         console.error("Error fetching tickets:", err);
-        setError("Failed to load data from server.");
+        setError("Failed to load service tickets.");
       }
     };
     fetchTickets();
@@ -27,8 +30,10 @@ export default function Tickets() {
 
   return (
     <div className="view-container">
-      <h1>📋 Service Tickets</h1>
-      {tickets.length > 0 ? (
+      <h1>📋 All Service Tickets</h1>
+      {tickets.length === 0 ? (
+        <p>No service tickets found.</p>
+      ) : (
         <div className="card-grid">
           {tickets.map((t) => (
             <div key={t.id} className="mechanic-card">
@@ -42,13 +47,14 @@ export default function Tickets() {
                 <strong>Status:</strong> {t.status}
               </p>
               <p>
-                <strong>Customer ID:</strong> {t.customer_id}
+                <strong>Customer:</strong> {t.customer_id}
+              </p>
+              <p>
+                <strong>Mechanic:</strong> {t.mechanic_id || "Unassigned"}
               </p>
             </div>
           ))}
         </div>
-      ) : (
-        <p>No service tickets found.</p>
       )}
     </div>
   );

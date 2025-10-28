@@ -1,4 +1,11 @@
-import Home from "./Home";
+import Profile from "./Profile";
+import Tickets from "./Tickets";
+
 export default function Dashboard() {
-  return <Home />;
+  return (
+    <>
+      <Profile />
+      <Tickets />
+    </>
+  );
 }

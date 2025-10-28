@@ -76,7 +76,6 @@ export default function Profile() {
   return (
     <div className="view-container">
       <h1>👨‍🔧 Mechanic Profile</h1>
-
       {message && (
         <p style={{ color: "limegreen", fontWeight: "bold" }}>{message}</p>
       )}
@@ -101,7 +100,6 @@ export default function Profile() {
             className="profile-input"
           />
         </label>
-
         <label>
           <strong>Email:</strong>
           <input
@@ -111,7 +109,6 @@ export default function Profile() {
             className="profile-input"
           />
         </label>
-
         <label>
           <strong>Specialty:</strong>
           <input
@@ -141,7 +138,7 @@ export default function Profile() {
               fontWeight: "bold",
             }}
           >
-            Save Changes
+            Save
           </button>
           <button
             onClick={handleDelete}
@@ -154,7 +151,7 @@ export default function Profile() {
               fontWeight: "bold",
             }}
           >
-            Delete Account
+            Delete
           </button>
         </div>
       </div>
