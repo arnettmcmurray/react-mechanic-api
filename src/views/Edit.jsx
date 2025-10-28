@@ -1,6 +1,6 @@
 // === Edit.jsx ===
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext.jsx";
 import { ticketAPI } from "../api/api";
 import "../index.css";
 

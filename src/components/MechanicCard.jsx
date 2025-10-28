@@ -1,6 +1,5 @@
-// === MechanicCard.jsx ===
-// Reusable card for mechanic info or ticket summaries
 export default function MechanicCard({ mechanic }) {
+  // Reusable card for mechanic info or ticket summaries
   const { name, specialty, status, ticketCount, onDuty } = mechanic;
 
   return (

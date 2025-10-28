@@ -1,7 +1,5 @@
 import { useContext, useState } from "react";
-import AuthContext from "../context/AuthContext";
-import MechanicCard from "../components/MechanicCard";
-import MechanicForm from "../components/MechanicForm";
+import AuthContext from "../context/AuthContext.jsx";
 
 export default function Mechanics() {
   const { mechanic, updateMechanic } = useContext(AuthContext);

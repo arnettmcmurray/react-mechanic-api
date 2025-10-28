@@ -1,4 +1,3 @@
-// === API Connection ===
 import axios from "axios";
 
 // ⚙️ Local dev proxy (vite.config.js handles /api)

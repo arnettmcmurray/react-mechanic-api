@@ -21,6 +21,7 @@ export default function DataDump() {
           tickets: tickets.data,
         });
       } catch (err) {
+        console.error(err);
         setError("Failed to fetch data.");
       }
     };

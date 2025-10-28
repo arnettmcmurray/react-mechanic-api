@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import MechanicCard from "../components/MechanicCard";
 import api from "../api/api.js";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Home() {
   const { user, token } = useAuth();
