@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { ticketAPI, mechanicAPI, customerAPI, inventoryAPI } from "../api/api";
 import "../index.css";
 import DataDump from "../components/DataDump";
+import MechanicForm from "../components/MechanicForm";
 
 export default function Edit() {
   const { token } = useAuth();
@@ -60,7 +61,7 @@ export default function Edit() {
   const handleChange = (e) =>
     setForms({ ...forms, [e.target.name]: e.target.value });
 
-  // === CRUD ===
+  // === CRUD functions (same as before) ===
   const handleAddCustomer = async () => {
     try {
       await customerAPI.create({
@@ -187,12 +188,13 @@ export default function Edit() {
 
   return (
     <div className="view-container">
-      <h1>⚙️ Admin Console</h1>
+      <h1 style={{ textAlign: "center" }}>⚙️ Admin Console</h1>
       {message && (
         <p
           style={{
             color: message.startsWith("✅") ? "limegreen" : "crimson",
             fontWeight: "bold",
+            textAlign: "center",
           }}
         >
           {message}
@@ -200,9 +202,17 @@ export default function Edit() {
       )}
 
       {/* === CUSTOMERS === */}
-      <section className="console-section">
+      <section className="console-section" style={{ textAlign: "center" }}>
         <h2>👥 Customers</h2>
-        <div className="ticket-row">
+        <div
+          className="ticket-row"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.4rem",
+          }}
+        >
           <input
             name="cust_name"
             placeholder="Customer Name"
@@ -227,15 +237,25 @@ export default function Edit() {
             value={forms.cust_car}
             onChange={handleChange}
           />
-          <button onClick={handleAddCustomer}>Add</button>
-          <button onClick={handleDeleteCustomer}>Delete</button>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button onClick={handleAddCustomer}>Add</button>
+            <button onClick={handleDeleteCustomer}>Delete</button>
+          </div>
         </div>
       </section>
 
       {/* === PARTS === */}
-      <section className="console-section">
+      <section className="console-section" style={{ textAlign: "center" }}>
         <h2>🧩 Parts Inventory</h2>
-        <div className="ticket-row">
+        <div
+          className="ticket-row"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.4rem",
+          }}
+        >
           <input
             name="part_name"
             placeholder="Part Name"
@@ -254,15 +274,26 @@ export default function Edit() {
             value={forms.part_qty}
             onChange={handleChange}
           />
-          <button onClick={handleAddPart}>Add</button>
-          <button onClick={handleDeletePart}>Delete</button>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button onClick={handleAddPart}>Add</button>
+            <button onClick={handleDeletePart}>Delete</button>
+          </div>
         </div>
       </section>
 
       {/* === MECHANICS === */}
-      <section className="console-section">
+      <section className="console-section" style={{ textAlign: "center" }}>
         <h2>👨‍🔧 Mechanics</h2>
-        <div className="ticket-row">
+        <MechanicForm />
+        <div
+          className="ticket-row"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.4rem",
+          }}
+        >
           <select name="mech_id" value={forms.mech_id} onChange={handleChange}>
             <option value="">Select Mechanic</option>
             {mechanics.map((m) => (
@@ -276,9 +307,17 @@ export default function Edit() {
       </section>
 
       {/* === TICKETS === */}
-      <section className="console-section">
+      <section className="console-section" style={{ textAlign: "center" }}>
         <h2>🧾 Tickets</h2>
-        <div className="ticket-row">
+        <div
+          className="ticket-row"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.4rem",
+          }}
+        >
           <select
             name="ticket_id"
             value={forms.ticket_id}
@@ -336,16 +375,22 @@ export default function Edit() {
             onChange={handleChange}
           />
 
-          <button onClick={handleCreateTicket}>Create</button>
-          <button onClick={handleAssignTicket}>Assign</button>
-          <button onClick={handleAddPartToTicket}>Add Part</button>
-          <button onClick={handleUpdateTicket}>Update</button>
-          <button onClick={handleDeleteTicket}>Delete</button>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button onClick={handleCreateTicket}>Create</button>
+            <button onClick={handleAssignTicket}>Assign</button>
+            <button onClick={handleAddPartToTicket}>Add Part</button>
+            <button onClick={handleUpdateTicket}>Update</button>
+            <button onClick={handleDeleteTicket}>Delete</button>
+          </div>
         </div>
       </section>
+
       {/* === Data Viewer Section === */}
-      <section className="data-viewer">
-        <h3> Data Viewer</h3>
+      <section
+        className="data-viewer"
+        style={{ textAlign: "center", marginTop: "2rem" }}
+      >
+        <h3 style={{ textAlign: "center" }}>🧩 Data Viewer</h3>
         <DataDump />
       </section>
     </div>
