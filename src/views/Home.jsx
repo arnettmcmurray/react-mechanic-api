@@ -8,38 +8,46 @@ export default function Home() {
   const [mechanics, setMechanics] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // === Fetch mechanics for public view ===
+  // === Fetch Mechanics ===
+  const fetchMechanics = async () => {
+    try {
+      const res = await api.get("/mechanics/get_all");
+      if (Array.isArray(res.data)) setMechanics(res.data);
+    } catch (err) {
+      console.error("Error fetching mechanics:", err);
+      setError("Could not load mechanics.");
+    }
+  };
+
+  // === Fetch Tickets ===
+  const fetchTickets = async () => {
+    if (!token) return;
+    try {
+      const res = await api.get("/service_tickets/get_all");
+      if (Array.isArray(res.data)) setTickets(res.data);
+      else if (res.data.message) setError(res.data.message);
+    } catch (err) {
+      console.error("Error fetching tickets:", err);
+      setError("Could not load tickets.");
+    }
+  };
+
+  // === Reload Handler ===
+  const handleReload = async () => {
+    setLoading(true);
+    await Promise.all([fetchMechanics(), fetchTickets()]);
+    setLoading(false);
+  };
+
+  // === Initial Load ===
   useEffect(() => {
-    const fetchMechanics = async () => {
-      try {
-        const res = await api.post("/mechanics/get_all");
-        if (Array.isArray(res.data)) setMechanics(res.data);
-      } catch (err) {
-        console.error("Error fetching mechanics:", err);
-        setError("Could not load mechanics.");
-      }
-    };
-    fetchMechanics();
+    handleReload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // === Fetch tickets only if logged in ===
-  useEffect(() => {
-    if (!token) return;
-    const fetchTickets = async () => {
-      try {
-        const res = await api.post("/service_tickets/get_all");
-        if (Array.isArray(res.data)) setTickets(res.data);
-        else if (res.data.message) setError(res.data.message);
-      } catch (err) {
-        console.error("Error fetching tickets:", err);
-        setError("Could not load tickets.");
-      }
-    };
-    fetchTickets();
-  }, [token]);
-
-  // === Logged-out view ===
+  // === Logged-out View ===
   if (!user) {
     return (
       <div className="view-container">
@@ -59,10 +67,6 @@ export default function Home() {
           </p>
           <p>
             <strong>Password:</strong> admin123
-          </p>
-          <p style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>
-            Log in as Admin to view all mechanics, customers, parts, and service
-            tickets.
           </p>
           <button
             className="demo-login-btn"
@@ -109,7 +113,7 @@ export default function Home() {
     );
   }
 
-  // === Logged-in view ===
+  // === Logged-in View ===
   return (
     <div className="view-container">
       <h1>Welcome back, {user.name}!</h1>
@@ -117,6 +121,22 @@ export default function Home() {
 
       {error && <p style={{ color: "red" }}>{error}</p>}
       {!error && tickets.length === 0 && <p>No active service tickets yet.</p>}
+
+      <button
+        onClick={handleReload}
+        disabled={loading}
+        style={{
+          marginBottom: "1rem",
+          backgroundColor: "limegreen",
+          color: "black",
+          padding: "0.5rem 1rem",
+          border: "none",
+          borderRadius: "6px",
+          fontWeight: "bold",
+        }}
+      >
+        {loading ? "Refreshing..." : "🔄 Reload Data"}
+      </button>
 
       <div className="card-grid">
         {tickets.map((t) => (

@@ -43,17 +43,14 @@ const NavBar = () => {
           </>
         ) : (
           <>
-            <Link to="/dashboard" className="nav-link">
-              Dashboard
+            <Link to="/" className="nav-link">
+              Shop
             </Link>
-            <Link to="/profile" className="nav-link">
-              Profile
+            <Link to="/dashboard" className="nav-link">
+              Mechanic
             </Link>
             <Link to="/edit" className="nav-link">
-              Edit
-            </Link>
-            <Link to="/tickets" className="nav-link">
-              Tickets
+              Console
             </Link>
             <Link to="/inventory" className="nav-link">
               Inventory

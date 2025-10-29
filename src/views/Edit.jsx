@@ -4,24 +4,37 @@ import { ticketAPI, mechanicAPI, customerAPI, inventoryAPI } from "../api/api";
 import "../index.css";
 
 export default function Edit() {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
+
   const [tickets, setTickets] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [mechanics, setMechanics] = useState([]);
   const [parts, setParts] = useState([]);
-  const [form, setForm] = useState({
+  const [message, setMessage] = useState("");
+
+  const [forms, setForms] = useState({
     ticket_id: "",
-    customer_id: "",
-    mech_id: "",
-    part_id: "",
     description: "",
     status: "",
+    mech_id: "",
+    customer_id: "",
+    part_id: "",
+    cust_name: "",
+    cust_email: "",
+    cust_car: "",
+    part_name: "",
+    part_price: "",
+    part_qty: "",
   });
-  const [message, setMessage] = useState("");
+
+  const alertMsg = (msg, good = false) => {
+    setMessage(good ? `✅ ${msg}` : `❌ ${msg}`);
+    setTimeout(() => setMessage(""), 3000);
+  };
 
   useEffect(() => {
     if (!token) return;
-    const loadData = async () => {
+    const loadAll = async () => {
       try {
         const [tRes, cRes, mRes, pRes] = await Promise.all([
           ticketAPI.getAll(),
@@ -29,91 +42,133 @@ export default function Edit() {
           mechanicAPI.getAll(),
           inventoryAPI.getAll(),
         ]);
-        setTickets(Array.isArray(tRes.data) ? tRes.data : []);
-        setCustomers(Array.isArray(cRes.data) ? cRes.data : []);
-        setMechanics(Array.isArray(mRes.data) ? mRes.data : []);
-        setParts(Array.isArray(pRes.data) ? pRes.data : []);
+        setTickets(tRes.data || []);
+        setCustomers(cRes.data || []);
+        setMechanics(mRes.data || []);
+        setParts(pRes.data || []);
       } catch (err) {
         console.error("Error loading data:", err);
+        alertMsg("Failed to load data.");
       }
     };
-    loadData();
-    // run once
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const reloadTickets = async () => {
-    try {
-      const res = await ticketAPI.getAll();
-      setTickets(res.data || []);
-    } catch (err) {
-      console.error("Failed to reload tickets:", err);
-    }
-  };
+    loadAll();
+  }, [token]);
 
   const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForms({ ...forms, [e.target.name]: e.target.value });
 
-  const alertMsg = (msg, good = false) => {
-    setMessage(good ? `✅ ${msg}` : `❌ ${msg}`);
-    setTimeout(() => setMessage(""), 3000);
-  };
-
-  const handleCreate = async () => {
+  // === Ticket Controls ===
+  const handleCreateTicket = async () => {
     try {
       await ticketAPI.create({
-        description: form.description,
-        customer_id: form.customer_id,
+        description: forms.description,
+        customer_id: forms.customer_id,
       });
-      alertMsg("Ticket created successfully!", true);
-      reloadTickets();
-    } catch (err) {
-      console.error(err);
+      alertMsg("Ticket created!", true);
+    } catch {
       alertMsg("Failed to create ticket.");
     }
   };
 
-  const handleAssign = async () => {
+  const handleAssignTicket = async () => {
     try {
       await ticketAPI.assignMechanic({
-        ticket_id: form.ticket_id,
-        mech_id: form.mech_id || user?.id,
+        ticket_id: forms.ticket_id,
+        mech_id: forms.mech_id,
       });
-      alertMsg("Mechanic assigned successfully!", true);
-      reloadTickets();
-    } catch (err) {
-      console.error(err);
+      alertMsg("Mechanic assigned!", true);
+    } catch {
       alertMsg("Failed to assign mechanic.");
     }
   };
 
-  const handleAddPart = async () => {
+  const handleAddPartToTicket = async () => {
     try {
       await ticketAPI.addParts({
-        ticket_id: form.ticket_id,
-        parts: [{ part_id: Number(form.part_id) }],
+        ticket_id: forms.ticket_id,
+        parts: [{ part_id: Number(forms.part_id) }],
       });
-      alertMsg("Part added successfully!", true);
-      reloadTickets();
-    } catch (err) {
-      console.error(err);
+      alertMsg("Part added to ticket!", true);
+    } catch {
       alertMsg("Failed to add part.");
     }
   };
 
-  const handleUpdate = async () => {
+  const handleUpdateTicket = async () => {
     try {
       await ticketAPI.update({
-        ticket_id: form.ticket_id,
-        status: form.status,
-        description: form.description,
-        customer_id: form.customer_id,
+        ticket_id: forms.ticket_id,
+        status: forms.status,
+        description: forms.description,
       });
-      alertMsg("Ticket updated successfully!", true);
-      reloadTickets();
-    } catch (err) {
-      console.error(err);
+      alertMsg("Ticket updated!", true);
+    } catch {
       alertMsg("Failed to update ticket.");
+    }
+  };
+
+  const handleDeleteTicket = async () => {
+    try {
+      await ticketAPI.delete(forms.ticket_id);
+      alertMsg("Ticket deleted!", true);
+    } catch {
+      alertMsg("Failed to delete ticket.");
+    }
+  };
+
+  // === Customer Controls ===
+  const handleAddCustomer = async () => {
+    try {
+      await customerAPI.create({
+        name: forms.cust_name,
+        email: forms.cust_email,
+        car: forms.cust_car,
+      });
+      alertMsg("Customer added!", true);
+    } catch {
+      alertMsg("Failed to add customer.");
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    try {
+      await customerAPI.delete(forms.customer_id);
+      alertMsg("Customer deleted!", true);
+    } catch {
+      alertMsg("Failed to delete customer.");
+    }
+  };
+
+  // === Part Controls ===
+  const handleAddPart = async () => {
+    try {
+      await inventoryAPI.create({
+        name: forms.part_name,
+        price: forms.part_price,
+        quantity: forms.part_qty,
+      });
+      alertMsg("Part added!", true);
+    } catch {
+      alertMsg("Failed to add part.");
+    }
+  };
+
+  const handleDeletePart = async () => {
+    try {
+      await inventoryAPI.delete(forms.part_id);
+      alertMsg("Part deleted!", true);
+    } catch {
+      alertMsg("Failed to delete part.");
+    }
+  };
+
+  // === Mechanic Controls ===
+  const handleDeleteMechanic = async () => {
+    try {
+      await mechanicAPI.delete(forms.mech_id);
+      alertMsg("Mechanic deleted!", true);
+    } catch {
+      alertMsg("Failed to delete mechanic.");
     }
   };
 
@@ -121,7 +176,7 @@ export default function Edit() {
 
   return (
     <div className="view-container">
-      <h1>🧾 Service Ticket Console</h1>
+      <h1>⚙️ Admin Console</h1>
       {message && (
         <p
           style={{
@@ -133,22 +188,83 @@ export default function Edit() {
         </p>
       )}
 
-      {/* === Ticket Form === */}
-      <form
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "0.5rem",
-          maxWidth: "600px",
-          margin: "1rem auto",
-          padding: "1rem",
-          border: "1px solid limegreen",
-          borderRadius: "8px",
-          background: "rgba(0,0,0,0.3)",
-        }}
-      >
-        <select name="ticket_id" value={form.ticket_id} onChange={handleChange}>
-          <option value="">Select Ticket ID</option>
+      {/* === CUSTOMER SECTION === */}
+      <section style={{ marginTop: "1.5rem" }}>
+        <h2>👥 Customers</h2>
+        <input
+          name="cust_name"
+          placeholder="Customer Name"
+          value={forms.cust_name}
+          onChange={handleChange}
+        />
+        <input
+          name="cust_email"
+          placeholder="Email"
+          value={forms.cust_email}
+          onChange={handleChange}
+        />
+        <input
+          name="cust_car"
+          placeholder="Car Info"
+          value={forms.cust_car}
+          onChange={handleChange}
+        />
+        <div>
+          <button onClick={handleAddCustomer}>Add</button>
+          <button onClick={handleDeleteCustomer}>Delete</button>
+        </div>
+      </section>
+
+      {/* === PARTS SECTION === */}
+      <section style={{ marginTop: "1.5rem" }}>
+        <h2>🧩 Parts Inventory</h2>
+        <input
+          name="part_name"
+          placeholder="Part Name"
+          value={forms.part_name}
+          onChange={handleChange}
+        />
+        <input
+          name="part_price"
+          placeholder="Price"
+          value={forms.part_price}
+          onChange={handleChange}
+        />
+        <input
+          name="part_qty"
+          placeholder="Quantity"
+          value={forms.part_qty}
+          onChange={handleChange}
+        />
+        <div>
+          <button onClick={handleAddPart}>Add</button>
+          <button onClick={handleDeletePart}>Delete</button>
+        </div>
+      </section>
+
+      {/* === MECHANIC SECTION === */}
+      <section style={{ marginTop: "1.5rem" }}>
+        <h2>👨‍🔧 Mechanics</h2>
+        <select name="mech_id" value={forms.mech_id} onChange={handleChange}>
+          <option value="">Select Mechanic</option>
+          {mechanics.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
+          ))}
+        </select>
+        <button onClick={handleDeleteMechanic}>Delete Mechanic</button>
+      </section>
+
+      {/* === TICKET SECTION === */}
+      <section style={{ marginTop: "1.5rem" }}>
+        <h2>🧾 Tickets</h2>
+        <select
+          name="ticket_id"
+          value={forms.ticket_id}
+          onChange={handleChange}
+        >
+          <option value="">Select Ticket</option>
           {tickets.map((t) => (
             <option key={t.id} value={t.id}>
               #{t.id} - {t.description}
@@ -158,31 +274,22 @@ export default function Edit() {
 
         <select
           name="customer_id"
-          value={form.customer_id}
+          value={forms.customer_id}
           onChange={handleChange}
         >
           <option value="">Select Customer</option>
           {customers.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name} ({c.car})
+              {c.name}
             </option>
           ))}
         </select>
 
-        <select name="mech_id" value={form.mech_id} onChange={handleChange}>
-          <option value="">Select Mechanic</option>
-          {mechanics.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </select>
-
-        <select name="part_id" value={form.part_id} onChange={handleChange}>
+        <select name="part_id" value={forms.part_id} onChange={handleChange}>
           <option value="">Select Part</option>
           {parts.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name} (${p.price})
+              {p.name}
             </option>
           ))}
         </select>
@@ -190,76 +297,22 @@ export default function Edit() {
         <input
           name="description"
           placeholder="Description"
-          value={form.description}
+          value={forms.description}
           onChange={handleChange}
         />
         <input
           name="status"
           placeholder="Status (Open/In Progress/Closed)"
-          value={form.status}
+          value={forms.status}
           onChange={handleChange}
         />
-
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            gridColumn: "1 / span 2",
-          }}
-        >
-          <button type="button" onClick={handleCreate}>
-            Create
-          </button>
-          <button type="button" onClick={handleAssign}>
-            Assign
-          </button>
-          <button type="button" onClick={handleAddPart}>
-            Add Part
-          </button>
-          <button type="button" onClick={handleUpdate}>
-            Update
-          </button>
+        <div>
+          <button onClick={handleCreateTicket}>Create</button>
+          <button onClick={handleAssignTicket}>Assign</button>
+          <button onClick={handleAddPartToTicket}>Add Part</button>
+          <button onClick={handleUpdateTicket}>Update</button>
+          <button onClick={handleDeleteTicket}>Delete</button>
         </div>
-      </form>
-
-      {/* === Ticket List === */}
-      <section style={{ marginTop: "2rem", width: "100%" }}>
-        <h2>📋 Current Tickets</h2>
-        {tickets.length === 0 ? (
-          <p>No tickets found.</p>
-        ) : (
-          <div className="card-grid">
-            {tickets.map((t) => (
-              <div
-                key={t.id}
-                className="mechanic-card"
-                style={{ textAlign: "left", padding: "1rem" }}
-              >
-                <p>
-                  <strong>ID:</strong> {t.id}
-                </p>
-                <p>
-                  <strong>Description:</strong> {t.description}
-                </p>
-                <p>
-                  <strong>Status:</strong> {t.status}
-                </p>
-                <p>
-                  <strong>Customer:</strong> {t.customer?.name || t.customer_id}
-                </p>
-                <p>
-                  <strong>Mechanics:</strong>{" "}
-                  {t.mechanics?.map((m) => m.name).join(", ") || "None"}
-                </p>
-                <p>
-                  <strong>Parts:</strong>{" "}
-                  {t.parts?.map((p) => p.name).join(", ") || "None"}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
     </div>
   );
