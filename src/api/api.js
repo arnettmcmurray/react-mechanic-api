@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// === Base URL (local dev vs Render) ===
+// === Base URL: switch automatically between local dev and Render ===
 const API_BASE = import.meta.env.DEV
   ? "/api"
   : "https://mechanics-api.onrender.com";
@@ -11,7 +11,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// === Auto-attach token ===
+// === Auto-attach token from localStorage ===
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;

@@ -1,34 +1,29 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import NavBar from "./components/NavBar";
-import Home from "./views/Home";
-import Dashboard from "./views/Dashboard";
-import Edit from "./views/Edit";
-import Inventory from "./views/Inventory";
-import Login from "./views/Login";
-import Register from "./views/Register";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import NavBar from "./components/NavBar.jsx";
+import Home from "./views/Home.jsx";
+import Dashboard from "./views/Dashboard.jsx";
+import Edit from "./views/Edit.jsx";
+import Inventory from "./views/Inventory.jsx";
+import Customers from "./views/Customers.jsx";
+import Login from "./views/Login.jsx";
+import Register from "./views/Register.jsx";
+import "./index.css";
 
-function App() {
+export default function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <NavBar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/edit" element={<Edit />} />
-        <Route path="/inventory" element={<Inventory />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route
-          path="*"
-          element={
-            <div style={{ padding: "2rem", textAlign: "center" }}>
-              <h2>404 - Page Not Found</h2>
-            </div>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/edit" element={<Edit />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </main>
+    </Router>
   );
 }
-
-export default App;

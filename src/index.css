@@ -257,3 +257,74 @@ button:disabled {
 .demo-login-btn:hover {
   opacity: 0.85;
 }
+
+/* === Admin Console Layout (Edit.jsx) === */
+.console-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 900px;
+  background: var(--card);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.05);
+}
+
+.console-section h2 {
+  margin-bottom: 1rem;
+  color: var(--accent);
+}
+
+.console-section input,
+.console-section select {
+  margin: 0.25rem 0.5rem 0.5rem 0;
+  padding: 0.5rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  min-width: 150px;
+}
+
+.console-section button {
+  margin: 0.25rem 0.5rem 0.5rem 0;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+/* color-coded action buttons */
+.console-section button:nth-of-type(1) {
+  background-color: limegreen;
+  color: black;
+}
+.console-section button:nth-of-type(2) {
+  background-color: crimson;
+  color: white;
+}
+.console-section button:hover {
+  opacity: 0.85;
+}
+
+/* separate ticket row for clarity */
+.ticket-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.ticket-row input,
+.ticket-row select {
+  margin-right: 0.5rem;
+}
+
+.ticket-row button {
+  margin-top: 0.5rem;
+}
