@@ -1,6 +1,6 @@
 // Route all calls through Vite proxy for local dev.
 // When deployed, Render will still serve these absolute paths.
-const BASE_URL = "https://mechanics-api.onrender.com";
+const BASE_URL = "/api";
 const TOKEN_KEY = import.meta?.env?.VITE_TOKEN_KEY || "token";
 function normalizeMethod(endpoint, method) {
   if (

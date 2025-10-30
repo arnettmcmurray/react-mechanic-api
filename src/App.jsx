@@ -8,6 +8,7 @@ import Login from "./views/Login.jsx";
 import Register from "./views/Register.jsx";
 import Inventory from "./views/Inventory.jsx";
 import Customers from "./views/Customers.jsx";
+import Tickets from "./views/Tickets.jsx"; // new import
 
 function Protected({ children }) {
   const { token } = useAuth();
@@ -54,6 +55,15 @@ export default function App() {
           element={
             <Protected>
               <Customers />
+            </Protected>
+          }
+        />
+
+        <Route
+          path="/tickets"
+          element={
+            <Protected>
+              <Tickets />
             </Protected>
           }
         />

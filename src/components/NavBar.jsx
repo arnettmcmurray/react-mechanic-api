@@ -89,6 +89,10 @@ const NavBar = () => {
             <Link to="/customers" className="nav-link">
               Customers
             </Link>
+            {/* ✅ Added Tickets link */}
+            <Link to="/tickets" className="nav-link">
+              Tickets
+            </Link>
             <button className="nav-btn" onClick={handleLogout}>
               Logout
             </button>
