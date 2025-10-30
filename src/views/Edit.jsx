@@ -1,13 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { mechanicAPI, customerAPI, inventoryAPI, ticketAPI } from "../api/api";
 import "../index.css";
 import DataDump from "../components/DataDump";
 
-const BASE_URL = "https://mechanics-api.onrender.com";
-
 export default function AdminConsole() {
   const { token } = useAuth();
+
   const [message, setMessage] = useState("");
   const [data, setData] = useState({
     customers: [],
@@ -17,15 +16,19 @@ export default function AdminConsole() {
   });
   const [form, setForm] = useState({});
 
-  const alertMsg = (msg, ok = false) => {
-    setMessage(ok ? `✅ ${msg}` : `❌ ${msg}`);
+  const notify = useCallback((ok, text) => {
+    setMessage(`${ok ? "✅" : "❌"} ${text}`);
     setTimeout(() => setMessage(""), 3000);
+  }, []);
+
+  const asArray = (res) => (Array.isArray(res) ? res : res?.data || []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
-
-  const loadAll = async () => {
+  const loadAll = useCallback(async () => {
     try {
       const [cust, mech, parts, tickets] = await Promise.all([
         customerAPI.getAll(),
@@ -34,36 +37,224 @@ export default function AdminConsole() {
         ticketAPI.getAll(),
       ]);
       setData({
-        customers: cust.data || [],
-        mechanics: mech.data || [],
-        parts: parts.data || [],
-        tickets: tickets.data || [],
+        customers: asArray(cust),
+        mechanics: asArray(mech),
+        parts: asArray(parts),
+        tickets: asArray(tickets),
       });
-    } catch {
-      alertMsg("Load failed");
+    } catch (err) {
+      console.error(err);
+      notify(false, "Load failed");
     }
-  };
+  }, [notify]);
 
   useEffect(() => {
     if (token) loadAll();
-  }, [token]);
+  }, [token, loadAll]);
 
-  const makeCall = async (method, url, body, success) => {
+  // === CRUD helpers mapped to api.js ===
+  // Customers
+  const createCustomer = async () => {
     try {
-      const res = await fetch(`${BASE_URL}${url}`, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: body ? JSON.stringify(body) : undefined,
+      await customerAPI.create(token, {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        car: form.car,
       });
-      if (!res.ok) throw new Error("Bad request");
-      alertMsg(success, true);
+      notify(true, "Customer created");
       loadAll();
-    } catch (err) {
-      console.error(err);
-      alertMsg("Action failed");
+    } catch (e) {
+      console.error(e);
+      notify(false, "Customer create failed");
+    }
+  };
+
+  const updateCustomer = async () => {
+    try {
+      await customerAPI.update(token, form.id, {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        car: form.car,
+      });
+      notify(true, "Customer updated");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Customer update failed");
+    }
+  };
+
+  const deleteCustomer = async () => {
+    try {
+      await customerAPI.delete(token, form.id);
+      notify(true, "Customer deleted");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Customer delete failed");
+    }
+  };
+
+  // Mechanics
+  const createMechanic = async () => {
+    try {
+      await mechanicAPI.create(token, {
+        name: form.name,
+        email: form.email,
+        password: form.password, // backend should hash
+        specialty: form.specialty,
+      });
+      notify(true, "Mechanic created");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Mechanic create failed");
+    }
+  };
+
+  const updateMechanic = async () => {
+    try {
+      await mechanicAPI.update(token, form.id, {
+        name: form.name,
+        email: form.email,
+        specialty: form.specialty,
+      });
+      notify(true, "Mechanic updated");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Mechanic update failed");
+    }
+  };
+
+  const deleteMechanic = async () => {
+    try {
+      await mechanicAPI.delete(token, form.id);
+      notify(true, "Mechanic deleted");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Mechanic delete failed");
+    }
+  };
+
+  // Inventory
+  const createPart = async () => {
+    try {
+      await inventoryAPI.create(token, {
+        name: form.name,
+        price: Number(form.price),
+        quantity: Number(form.quantity),
+      });
+      notify(true, "Part created");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Part create failed");
+    }
+  };
+
+  const updatePart = async () => {
+    try {
+      await inventoryAPI.update(token, form.id, {
+        name: form.name,
+        price: Number(form.price),
+        quantity: Number(form.quantity),
+      });
+      notify(true, "Part updated");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Part update failed");
+    }
+  };
+
+  const deletePart = async () => {
+    try {
+      await inventoryAPI.delete(token, form.id);
+      notify(true, "Part deleted");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Part delete failed");
+    }
+  };
+
+  // Tickets
+  const createTicket = async () => {
+    try {
+      await ticketAPI.create(token, {
+        description: form.description,
+        status: form.status || "Open",
+        customer_id: Number(form.customer_id),
+        // align to backend contract; fall back included for older seeds
+        assigned_mechanic_id:
+          Number(form.assigned_mechanic_id) || Number(form.mech_id) || null,
+      });
+      notify(true, "Ticket created");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Ticket create failed");
+    }
+  };
+
+  const updateTicket = async () => {
+    try {
+      await ticketAPI.update(token, form.id, {
+        description: form.description,
+        status: form.status,
+        customer_id: Number(form.customer_id),
+        assigned_mechanic_id:
+          Number(form.assigned_mechanic_id) || Number(form.mech_id) || null,
+      });
+      notify(true, "Ticket updated");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Ticket update failed");
+    }
+  };
+
+  const deleteTicket = async () => {
+    try {
+      await ticketAPI.delete(token, form.id);
+      notify(true, "Ticket deleted");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Ticket delete failed");
+    }
+  };
+
+  const assignMechanic = async () => {
+    try {
+      await ticketAPI.assign(token, {
+        ticket_id: Number(form.id),
+        mech_id:
+          Number(form.assigned_mechanic_id) || Number(form.mech_id) || null,
+      });
+      notify(true, "Mechanic assigned");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Assign failed");
+    }
+  };
+
+  const addPartToTicket = async () => {
+    try {
+      await ticketAPI.addParts(token, {
+        ticket_id: Number(form.id),
+        parts: [{ part_id: Number(form.part_id) }],
+      });
+      notify(true, "Part added");
+      loadAll();
+    } catch (e) {
+      console.error(e);
+      notify(false, "Add part failed");
     }
   };
 
@@ -96,32 +287,9 @@ export default function AdminConsole() {
         <input name="phone" placeholder="Phone" onChange={handleChange} />
         <input name="car" placeholder="Car Info" onChange={handleChange} />
         <div className="btn-group">
-          <button
-            onClick={() =>
-              makeCall("POST", "/customers", form, "Customer created")
-            }
-          >
-            Create
-          </button>
-          <button
-            onClick={() =>
-              makeCall("PUT", `/customers/${form.id}`, form, "Customer updated")
-            }
-          >
-            Update
-          </button>
-          <button
-            onClick={() =>
-              makeCall(
-                "DELETE",
-                `/customers/${form.id}`,
-                null,
-                "Customer deleted"
-              )
-            }
-          >
-            Delete
-          </button>
+          <button onClick={createCustomer}>Create</button>
+          <button onClick={updateCustomer}>Update</button>
+          <button onClick={deleteCustomer}>Delete</button>
         </div>
       </section>
 
@@ -145,32 +313,9 @@ export default function AdminConsole() {
           onChange={handleChange}
         />
         <div className="btn-group">
-          <button
-            onClick={() =>
-              makeCall("POST", "/mechanics", form, "Mechanic created")
-            }
-          >
-            Create
-          </button>
-          <button
-            onClick={() =>
-              makeCall("PUT", `/mechanics/${form.id}`, form, "Mechanic updated")
-            }
-          >
-            Update
-          </button>
-          <button
-            onClick={() =>
-              makeCall(
-                "DELETE",
-                `/mechanics/${form.id}`,
-                null,
-                "Mechanic deleted"
-              )
-            }
-          >
-            Delete
-          </button>
+          <button onClick={createMechanic}>Create</button>
+          <button onClick={updateMechanic}>Update</button>
+          <button onClick={deleteMechanic}>Delete</button>
         </div>
       </section>
 
@@ -189,25 +334,9 @@ export default function AdminConsole() {
         <input name="price" placeholder="Price" onChange={handleChange} />
         <input name="quantity" placeholder="Quantity" onChange={handleChange} />
         <div className="btn-group">
-          <button
-            onClick={() => makeCall("POST", "/inventory", form, "Part created")}
-          >
-            Create
-          </button>
-          <button
-            onClick={() =>
-              makeCall("PUT", `/inventory/${form.id}`, form, "Part updated")
-            }
-          >
-            Update
-          </button>
-          <button
-            onClick={() =>
-              makeCall("DELETE", `/inventory/${form.id}`, null, "Part deleted")
-            }
-          >
-            Delete
-          </button>
+          <button onClick={createPart}>Create</button>
+          <button onClick={updatePart}>Update</button>
+          <button onClick={deletePart}>Delete</button>
         </div>
       </section>
 
@@ -236,7 +365,7 @@ export default function AdminConsole() {
             </option>
           ))}
         </select>
-        <select name="mech_id" onChange={handleChange}>
+        <select name="assigned_mechanic_id" onChange={handleChange}>
           <option value="">Assign Mechanic</option>
           {data.mechanics.map((m) => (
             <option key={m.id} value={m.id}>
@@ -253,64 +382,11 @@ export default function AdminConsole() {
           ))}
         </select>
         <div className="btn-group">
-          <button
-            onClick={() =>
-              makeCall("POST", "/service_tickets", form, "Ticket created")
-            }
-          >
-            Create
-          </button>
-          <button
-            onClick={() =>
-              makeCall(
-                "PUT",
-                `/service_tickets/${form.id}`,
-                form,
-                "Ticket updated"
-              )
-            }
-          >
-            Update
-          </button>
-          <button
-            onClick={() =>
-              makeCall(
-                "DELETE",
-                `/service_tickets/${form.id}`,
-                null,
-                "Ticket deleted"
-              )
-            }
-          >
-            Delete
-          </button>
-          <button
-            onClick={() =>
-              makeCall(
-                "POST",
-                "/service_tickets/assign",
-                { ticket_id: form.id, mech_id: form.mech_id },
-                "Mechanic assigned"
-              )
-            }
-          >
-            Assign Mechanic
-          </button>
-          <button
-            onClick={() =>
-              makeCall(
-                "POST",
-                "/service_tickets/add_parts",
-                {
-                  ticket_id: form.id,
-                  parts: [{ part_id: Number(form.part_id) }],
-                },
-                "Part added"
-              )
-            }
-          >
-            Add Part
-          </button>
+          <button onClick={createTicket}>Create</button>
+          <button onClick={updateTicket}>Update</button>
+          <button onClick={deleteTicket}>Delete</button>
+          <button onClick={assignMechanic}>Assign Mechanic</button>
+          <button onClick={addPartToTicket}>Add Part</button>
         </div>
       </section>
 

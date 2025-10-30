@@ -6,13 +6,16 @@ import "../index.css";
 export default function MechanicProfile() {
   const { user, token, logout } = useAuth();
 
-  // === Local state ===
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [message, setMessage] = useState("");
 
-  // Minimal derived avatar initials
+  const notify = useCallback((ok, text) => {
+    setMessage(`${ok ? "✅" : "❌"} ${text}`);
+    setTimeout(() => setMessage(""), 3000);
+  }, []);
+
   const initials = useMemo(() => {
     const n = profile?.name?.trim() || user?.name || "M W";
     return (
@@ -25,39 +28,45 @@ export default function MechanicProfile() {
     );
   }, [profile?.name, user?.name]);
 
-  // === Helpers ===
-  const notify = useCallback((ok, text) => {
-    setMessage(`${ok ? "✅" : "❌"} ${text}`);
-    // keep message visible for a moment; no toasts, no alerts
-    setTimeout(() => setMessage(""), 3000);
-  }, []);
+  // Resolve mechanic for logged-in user:
+  // 1) try /mechanics/:user.id
+  // 2) fallback to /mechanics/get_all and match by email
+  const resolveMechanicForUser = useCallback(
+    async (u) => {
+      try {
+        const got = await mechanicAPI.getOne(u.id, token);
+        const mech = got?.id ? got : got?.data || null;
+        if (mech?.id) return mech;
+      } catch {
+        // ignore, try by email
+      }
+      try {
+        const all = await mechanicAPI.getAll();
+        const arr = Array.isArray(all) ? all : all?.data || [];
+        const match = arr.find(
+          (m) =>
+            String(m.email || "").toLowerCase() ===
+            String(u.email || "").toLowerCase()
+        );
+        if (match) return match;
+      } catch (err) {
+        console.error("resolve by email failed:", err);
+      }
+      return null;
+    },
+    [token]
+  );
 
   const loadData = useCallback(async () => {
     if (!token || !user) return;
     setLoading(true);
     try {
-      // Try to load the mechanic by the logged-in user's id.
-      // If admin account isn't a mechanic, the /mechanics/:id may 404 — we handle that gracefully.
-      let mech = null;
-      try {
-        mech = await mechanicAPI.getOne(user.id, token);
-      } catch (e) {
-        mech = null; // admin or non-mechanic token, not fatal
-      }
+      // map account -> mechanic row
+      let mechObj = await resolveMechanicForUser(user);
 
-      // Tickets for the current mechanic (if token belongs to mechanic).
-      // If API returns [], that's fine. If it errors, we still render profile.
-      let myTickets = [];
-      try {
-        const res = await mechanicAPI.myTickets(token);
-        myTickets = Array.isArray(res) ? res : res?.data || [];
-      } catch {
-        myTickets = [];
-      }
-
-      // Shape profile fallback if mech missing but user exists (admin login)
-      if (!mech && user) {
-        mech = {
+      // if nothing, show display-only admin profile
+      if (!mechObj) {
+        mechObj = {
           id: user.id,
           name: user.name || "Admin User",
           email: user.email || "admin@shop.com",
@@ -65,7 +74,17 @@ export default function MechanicProfile() {
         };
       }
 
-      setProfile(mech);
+      // tickets (admin may get empty list)
+      let myTickets = [];
+      try {
+        const res = await mechanicAPI.myTickets(token);
+        myTickets = Array.isArray(res) ? res : res?.data || [];
+      } catch (err) {
+        console.error("myTickets fetch failed:", err);
+        myTickets = [];
+      }
+
+      setProfile(mechObj);
       setTickets(Array.isArray(myTickets) ? myTickets : []);
     } catch (err) {
       console.error("Load failed:", err);
@@ -73,13 +92,12 @@ export default function MechanicProfile() {
     } finally {
       setLoading(false);
     }
-  }, [token, user, notify]);
+  }, [token, user, notify, resolveMechanicForUser]);
 
   useEffect(() => {
     if (token && user) loadData();
   }, [token, user, loadData]);
 
-  // === Profile update ===
   const handleSaveProfile = async () => {
     if (!profile?.id) {
       notify(false, "No mechanic profile to update.");
@@ -107,7 +125,6 @@ export default function MechanicProfile() {
     try {
       await mechanicAPI.delete(token, profile.id);
       notify(true, "Mechanic deleted");
-      // if you delete yourself, you’re out — log out cleanly
       logout();
     } catch (err) {
       console.error(err);
@@ -115,7 +132,6 @@ export default function MechanicProfile() {
     }
   };
 
-  // === Ticket actions ===
   const handleRefreshTickets = async () => {
     try {
       const res = await mechanicAPI.myTickets(token);
@@ -154,23 +170,6 @@ export default function MechanicProfile() {
 
   if (!token) return <p style={{ padding: "2rem" }}>Please log in first.</p>;
   if (loading) return <p style={{ padding: "2rem" }}>Loading...</p>;
-  if (!profile)
-    return (
-      <div className="view-container">
-        <h1>👨‍🔧 Mechanic Profile</h1>
-        {message && (
-          <p
-            style={{
-              color: message.startsWith("✅") ? "limegreen" : "crimson",
-              fontWeight: "bold",
-            }}
-          >
-            {message}
-          </p>
-        )}
-        <p>No mechanic profile found.</p>
-      </div>
-    );
 
   return (
     <div className="view-container">
@@ -187,7 +186,6 @@ export default function MechanicProfile() {
         </p>
       )}
 
-      {/* === Profile Card === */}
       <div
         className="mechanic-card"
         style={{
@@ -223,19 +221,19 @@ export default function MechanicProfile() {
 
         <input
           name="name"
-          value={profile.name || ""}
+          value={profile?.name || ""}
           onChange={(e) => setProfile({ ...profile, name: e.target.value })}
           placeholder="Name"
         />
         <input
           name="email"
-          value={profile.email || ""}
+          value={profile?.email || ""}
           onChange={(e) => setProfile({ ...profile, email: e.target.value })}
           placeholder="Email"
         />
         <input
           name="specialty"
-          value={profile.specialty || ""}
+          value={profile?.specialty || ""}
           onChange={(e) =>
             setProfile({ ...profile, specialty: e.target.value })
           }
@@ -253,7 +251,6 @@ export default function MechanicProfile() {
         </div>
       </div>
 
-      {/* === Tickets Section === */}
       <section style={{ marginTop: "2rem", width: "100%" }}>
         <h2>🧾 My Tickets</h2>
         <button onClick={handleRefreshTickets} style={{ marginBottom: "1rem" }}>
@@ -269,7 +266,6 @@ export default function MechanicProfile() {
                 <p>Status: {t.status}</p>
                 <p>Customer ID: {t.customer_id}</p>
 
-                {/* Inline status updater (no prompts, no modals) */}
                 <div
                   style={{
                     display: "flex",
