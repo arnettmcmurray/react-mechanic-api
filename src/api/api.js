@@ -1,9 +1,7 @@
 // Route all calls through Vite proxy for local dev.
 // When deployed, Render will still serve these absolute paths.
-const BASE_URL = "/api";
-
+const BASE_URL = "https://mechanics-api.onrender.com";
 const TOKEN_KEY = import.meta?.env?.VITE_TOKEN_KEY || "token";
-
 function normalizeMethod(endpoint, method) {
   if (
     endpoint.endsWith("/get_all") ||
@@ -13,7 +11,6 @@ function normalizeMethod(endpoint, method) {
     return "POST";
   return method || "GET";
 }
-
 function authHeader(token) {
   return {
     "Content-Type": "application/json",
@@ -123,4 +120,3 @@ export const ticketAPI = {
   addParts: async (token, body) =>
     fetchWithToken("/service_tickets/add_parts", "POST", body, token),
 };
-  
