@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import AuthContext from "../context/AuthContext";
+import { ticketAPI } from "../api/api";
 
 const NavBar = () => {
   const { user, token, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+  const [openCount, setOpenCount] = useState(0);
 
   const toggleTheme = () => {
     const next = theme === "light" ? "dark" : "light";
@@ -17,6 +19,16 @@ const NavBar = () => {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (!token) return;
+    ticketAPI.getAll().then((res) => {
+      const open = (res.data || []).filter(
+        (t) => t.status && t.status.toLowerCase() !== "closed"
+      ).length;
+      setOpenCount(open);
+    });
+  }, [token]);
 
   const handleLogout = () => {
     logout();
@@ -44,7 +56,7 @@ const NavBar = () => {
         ) : (
           <>
             <Link to="/" className="nav-link">
-              Shop
+              Shop {openCount > 0 && `(${openCount})`}
             </Link>
             <Link to="/mechanic/profile" className="nav-link">
               Mechanic

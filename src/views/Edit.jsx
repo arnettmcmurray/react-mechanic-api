@@ -1,165 +1,71 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { ticketAPI, mechanicAPI, customerAPI, inventoryAPI } from "../api/api";
+import { mechanicAPI, customerAPI, inventoryAPI, ticketAPI } from "../api/api";
 import "../index.css";
 import DataDump from "../components/DataDump";
+
+const BASE_URL = "https://mechanics-api.onrender.com";
 
 export default function AdminConsole() {
   const { token } = useAuth();
   const [message, setMessage] = useState("");
-
-  const [form, setForm] = useState({
-    id: "",
-    name: "",
-    email: "",
-    phone: "",
-    car: "",
-    specialty: "",
-    price: "",
-    quantity: "",
-    description: "",
-    status: "",
-    mech_id: "",
-    part_id: "",
-    customer_id: "",
-    ticket_id: "",
+  const [data, setData] = useState({
+    customers: [],
+    mechanics: [],
+    parts: [],
+    tickets: [],
   });
+  const [form, setForm] = useState({});
 
   const alertMsg = (msg, ok = false) => {
     setMessage(ok ? `✅ ${msg}` : `❌ ${msg}`);
-    setTimeout(() => setMessage(""), 2500);
+    setTimeout(() => setMessage(""), 3000);
   };
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  // unified helper
-  const makeCall = async (apiCall, payload, success) => {
+  const loadAll = async () => {
     try {
-      await apiCall(payload);
+      const [cust, mech, parts, tickets] = await Promise.all([
+        customerAPI.getAll(),
+        mechanicAPI.getAll(),
+        inventoryAPI.getAll(),
+        ticketAPI.getAll(),
+      ]);
+      setData({
+        customers: cust.data || [],
+        mechanics: mech.data || [],
+        parts: parts.data || [],
+        tickets: tickets.data || [],
+      });
+    } catch {
+      alertMsg("Load failed");
+    }
+  };
+
+  useEffect(() => {
+    if (token) loadAll();
+  }, [token]);
+
+  const makeCall = async (method, url, body, success) => {
+    try {
+      const res = await fetch(`${BASE_URL}${url}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      if (!res.ok) throw new Error("Bad request");
       alertMsg(success, true);
+      loadAll();
     } catch (err) {
       console.error(err);
       alertMsg("Action failed");
     }
   };
-
-  // === CRUD SHORTCUTS ===
-  const addCustomer = () =>
-    makeCall(
-      customerAPI.create,
-      {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        car: form.car,
-      },
-      "Customer added"
-    );
-
-  const updateCustomer = () =>
-    makeCall(
-      customerAPI.update,
-      { id: form.id, phone: form.phone },
-      "Customer updated"
-    );
-
-  const deleteCustomer = () =>
-    makeCall(customerAPI.delete, form.id, "Customer deleted");
-
-  const addPart = () =>
-    makeCall(
-      inventoryAPI.create,
-      {
-        name: form.name,
-        price: form.price,
-        quantity: form.quantity,
-      },
-      "Part added"
-    );
-
-  const updatePart = () =>
-    makeCall(
-      inventoryAPI.update,
-      {
-        id: form.id,
-        price: form.price,
-        quantity: form.quantity,
-      },
-      "Part updated"
-    );
-
-  const deletePart = () =>
-    makeCall(inventoryAPI.delete, form.id, "Part deleted");
-
-  const addMechanic = () =>
-    makeCall(
-      mechanicAPI.create,
-      {
-        name: form.name,
-        email: form.email,
-        password: "temp123",
-        specialty: form.specialty,
-      },
-      "Mechanic added"
-    );
-
-  const updateMechanic = () =>
-    makeCall(
-      mechanicAPI.update,
-      {
-        id: form.id,
-        specialty: form.specialty,
-      },
-      "Mechanic updated"
-    );
-
-  const deleteMechanic = () =>
-    makeCall(mechanicAPI.delete, form.id, "Mechanic deleted");
-
-  const addTicket = () =>
-    makeCall(
-      ticketAPI.create,
-      {
-        description: form.description,
-        customer_id: form.customer_id,
-      },
-      "Ticket created"
-    );
-
-  const updateTicket = () =>
-    makeCall(
-      ticketAPI.update,
-      {
-        ticket_id: form.ticket_id,
-        status: form.status,
-        description: form.description,
-      },
-      "Ticket updated"
-    );
-
-  const deleteTicket = () =>
-    makeCall(ticketAPI.delete, form.ticket_id, "Ticket deleted");
-
-  const assignMechanic = () =>
-    makeCall(
-      ticketAPI.assignMechanic,
-      {
-        ticket_id: form.ticket_id,
-        mech_id: form.mech_id,
-      },
-      "Mechanic assigned"
-    );
-
-  const addPartToTicket = () =>
-    makeCall(
-      ticketAPI.addParts,
-      {
-        ticket_id: form.ticket_id,
-        parts: [{ part_id: Number(form.part_id) }],
-      },
-      "Part added to ticket"
-    );
 
   if (!token) return <p style={{ padding: "2rem" }}>Please log in first.</p>;
 
@@ -168,97 +74,247 @@ export default function AdminConsole() {
       <h1>⚙️ Admin Console</h1>
       {message && (
         <p
-          style={{
-            color: message.startsWith("✅") ? "limegreen" : "crimson",
-            fontWeight: "bold",
-          }}
+          style={{ color: message.startsWith("✅") ? "limegreen" : "crimson" }}
         >
           {message}
         </p>
       )}
 
-      {/* === CUSTOMERS === */}
+      {/* CUSTOMERS */}
       <section className="console-section">
         <h2>👥 Customers</h2>
-        <input name="id" placeholder="ID" onChange={handleChange} />
+        <select name="id" onChange={handleChange}>
+          <option value="">Select Customer</option>
+          {data.customers.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} — {c.car}
+            </option>
+          ))}
+        </select>
         <input name="name" placeholder="Name" onChange={handleChange} />
         <input name="email" placeholder="Email" onChange={handleChange} />
         <input name="phone" placeholder="Phone" onChange={handleChange} />
         <input name="car" placeholder="Car Info" onChange={handleChange} />
         <div className="btn-group">
-          <button onClick={addCustomer}>Add</button>
-          <button onClick={updateCustomer}>Update</button>
-          <button onClick={deleteCustomer}>Delete</button>
+          <button
+            onClick={() =>
+              makeCall("POST", "/customers", form, "Customer created")
+            }
+          >
+            Create
+          </button>
+          <button
+            onClick={() =>
+              makeCall("PUT", `/customers/${form.id}`, form, "Customer updated")
+            }
+          >
+            Update
+          </button>
+          <button
+            onClick={() =>
+              makeCall(
+                "DELETE",
+                `/customers/${form.id}`,
+                null,
+                "Customer deleted"
+              )
+            }
+          >
+            Delete
+          </button>
         </div>
       </section>
 
-      {/* === PARTS === */}
-      <section className="console-section">
-        <h2>🧩 Parts Inventory</h2>
-        <input name="id" placeholder="ID" onChange={handleChange} />
-        <input name="name" placeholder="Part Name" onChange={handleChange} />
-        <input name="price" placeholder="Price" onChange={handleChange} />
-        <input name="quantity" placeholder="Quantity" onChange={handleChange} />
-        <div className="btn-group">
-          <button onClick={addPart}>Add</button>
-          <button onClick={updatePart}>Update</button>
-          <button onClick={deletePart}>Delete</button>
-        </div>
-      </section>
-
-      {/* === MECHANICS === */}
+      {/* MECHANICS */}
       <section className="console-section">
         <h2>👨‍🔧 Mechanics</h2>
-        <input name="id" placeholder="ID" onChange={handleChange} />
+        <select name="id" onChange={handleChange}>
+          <option value="">Select Mechanic</option>
+          {data.mechanics.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name} — {m.specialty}
+            </option>
+          ))}
+        </select>
         <input name="name" placeholder="Name" onChange={handleChange} />
         <input name="email" placeholder="Email" onChange={handleChange} />
+        <input name="password" placeholder="Password" onChange={handleChange} />
         <input
           name="specialty"
           placeholder="Specialty"
           onChange={handleChange}
         />
         <div className="btn-group">
-          <button onClick={addMechanic}>Add</button>
-          <button onClick={updateMechanic}>Update</button>
-          <button onClick={deleteMechanic}>Delete</button>
+          <button
+            onClick={() =>
+              makeCall("POST", "/mechanics", form, "Mechanic created")
+            }
+          >
+            Create
+          </button>
+          <button
+            onClick={() =>
+              makeCall("PUT", `/mechanics/${form.id}`, form, "Mechanic updated")
+            }
+          >
+            Update
+          </button>
+          <button
+            onClick={() =>
+              makeCall(
+                "DELETE",
+                `/mechanics/${form.id}`,
+                null,
+                "Mechanic deleted"
+              )
+            }
+          >
+            Delete
+          </button>
         </div>
       </section>
 
-      {/* === TICKETS === */}
+      {/* INVENTORY */}
       <section className="console-section">
-        <h2>🧾 Tickets</h2>
-        <input
-          name="ticket_id"
-          placeholder="Ticket ID"
-          onChange={handleChange}
-        />
+        <h2>🧩 Inventory Parts</h2>
+        <select name="id" onChange={handleChange}>
+          <option value="">Select Part</option>
+          {data.parts.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} — ${p.price}
+            </option>
+          ))}
+        </select>
+        <input name="name" placeholder="Name" onChange={handleChange} />
+        <input name="price" placeholder="Price" onChange={handleChange} />
+        <input name="quantity" placeholder="Quantity" onChange={handleChange} />
+        <div className="btn-group">
+          <button
+            onClick={() => makeCall("POST", "/inventory", form, "Part created")}
+          >
+            Create
+          </button>
+          <button
+            onClick={() =>
+              makeCall("PUT", `/inventory/${form.id}`, form, "Part updated")
+            }
+          >
+            Update
+          </button>
+          <button
+            onClick={() =>
+              makeCall("DELETE", `/inventory/${form.id}`, null, "Part deleted")
+            }
+          >
+            Delete
+          </button>
+        </div>
+      </section>
+
+      {/* TICKETS */}
+      <section className="console-section">
+        <h2>🧾 Service Tickets</h2>
+        <select name="id" onChange={handleChange}>
+          <option value="">Select Ticket</option>
+          {data.tickets.map((t) => (
+            <option key={t.id} value={t.id}>
+              #{t.id} — {t.description}
+            </option>
+          ))}
+        </select>
         <input
           name="description"
           placeholder="Description"
           onChange={handleChange}
         />
         <input name="status" placeholder="Status" onChange={handleChange} />
-        <input
-          name="customer_id"
-          placeholder="Customer ID"
-          onChange={handleChange}
-        />
-        <input
-          name="mech_id"
-          placeholder="Mechanic ID"
-          onChange={handleChange}
-        />
-        <input name="part_id" placeholder="Part ID" onChange={handleChange} />
+        <select name="customer_id" onChange={handleChange}>
+          <option value="">Select Customer</option>
+          {data.customers.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <select name="mech_id" onChange={handleChange}>
+          <option value="">Assign Mechanic</option>
+          {data.mechanics.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
+          ))}
+        </select>
+        <select name="part_id" onChange={handleChange}>
+          <option value="">Select Part</option>
+          {data.parts.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
         <div className="btn-group">
-          <button onClick={addTicket}>Create</button>
-          <button onClick={updateTicket}>Update</button>
-          <button onClick={deleteTicket}>Delete</button>
-          <button onClick={assignMechanic}>Assign Mechanic</button>
-          <button onClick={addPartToTicket}>Add Part</button>
+          <button
+            onClick={() =>
+              makeCall("POST", "/service_tickets", form, "Ticket created")
+            }
+          >
+            Create
+          </button>
+          <button
+            onClick={() =>
+              makeCall(
+                "PUT",
+                `/service_tickets/${form.id}`,
+                form,
+                "Ticket updated"
+              )
+            }
+          >
+            Update
+          </button>
+          <button
+            onClick={() =>
+              makeCall(
+                "DELETE",
+                `/service_tickets/${form.id}`,
+                null,
+                "Ticket deleted"
+              )
+            }
+          >
+            Delete
+          </button>
+          <button
+            onClick={() =>
+              makeCall(
+                "POST",
+                "/service_tickets/assign",
+                { ticket_id: form.id, mech_id: form.mech_id },
+                "Mechanic assigned"
+              )
+            }
+          >
+            Assign Mechanic
+          </button>
+          <button
+            onClick={() =>
+              makeCall(
+                "POST",
+                "/service_tickets/add_parts",
+                {
+                  ticket_id: form.id,
+                  parts: [{ part_id: Number(form.part_id) }],
+                },
+                "Part added"
+              )
+            }
+          >
+            Add Part
+          </button>
         </div>
       </section>
 
-      {/* === DATA VIEWER === */}
+      {/* DATA VIEWER */}
       <section className="console-section" style={{ marginTop: "2rem" }}>
         <h2>🧠 Data Viewer</h2>
         <DataDump />
