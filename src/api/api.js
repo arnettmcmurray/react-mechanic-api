@@ -1,5 +1,3 @@
-// === api.js — Final React Alignment Build ===
-
 const BASE_URL = "https://mechanics-api.onrender.com";
 
 // === Shared Header Builder ===
@@ -21,10 +19,12 @@ async function fetchWithToken(
       headers: authHeader(token),
       body: body ? JSON.stringify(body) : null,
     });
+
     if (!res.ok) {
       const text = await res.text();
       throw new Error(`HTTP ${res.status}: ${text}`);
     }
+
     const data = await res.json().catch(() => ({}));
     return data;
   } catch (err) {
@@ -82,7 +82,7 @@ export const inventoryAPI = {
     fetchWithToken(`/inventory/${id}`, "DELETE", null, token),
 };
 
-// === Tickets ===
+// === Service Tickets ===
 export const ticketAPI = {
   getAll: async () => fetchWithToken("/service_tickets"),
   getOne: async (id, token) =>

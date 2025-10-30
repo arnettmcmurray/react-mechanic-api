@@ -1,107 +1,181 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { mechanicAPI, ticketAPI } from "../api/api";
 import "../index.css";
 
 export default function MechanicProfile() {
   const { user, token, logout } = useAuth();
+
+  // === Local state ===
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [message, setMessage] = useState("");
 
-  // === Load mechanic + tickets ===
-  const loadData = async () => {
+  // Minimal derived avatar initials
+  const initials = useMemo(() => {
+    const n = profile?.name?.trim() || user?.name || "M W";
+    return (
+      n
+        .split(" ")
+        .filter(Boolean)
+        .map((x) => x[0]?.toUpperCase())
+        .join("")
+        .slice(0, 3) || "MW"
+    );
+  }, [profile?.name, user?.name]);
+
+  // === Helpers ===
+  const notify = useCallback((ok, text) => {
+    setMessage(`${ok ? "✅" : "❌"} ${text}`);
+    // keep message visible for a moment; no toasts, no alerts
+    setTimeout(() => setMessage(""), 3000);
+  }, []);
+
+  const loadData = useCallback(async () => {
+    if (!token || !user) return;
+    setLoading(true);
     try {
-      const [mechRes, ticketRes] = await Promise.all([
-        mechanicAPI.getOne(user.id),
-        mechanicAPI.getMyTickets(),
-      ]);
-      setProfile(mechRes.data);
-      setTickets(ticketRes.data || []);
+      // Try to load the mechanic by the logged-in user's id.
+      // If admin account isn't a mechanic, the /mechanics/:id may 404 — we handle that gracefully.
+      let mech = null;
+      try {
+        mech = await mechanicAPI.getOne(user.id, token);
+      } catch (e) {
+        mech = null; // admin or non-mechanic token, not fatal
+      }
+
+      // Tickets for the current mechanic (if token belongs to mechanic).
+      // If API returns [], that's fine. If it errors, we still render profile.
+      let myTickets = [];
+      try {
+        const res = await mechanicAPI.myTickets(token);
+        myTickets = Array.isArray(res) ? res : res?.data || [];
+      } catch {
+        myTickets = [];
+      }
+
+      // Shape profile fallback if mech missing but user exists (admin login)
+      if (!mech && user) {
+        mech = {
+          id: user.id,
+          name: user.name || "Admin User",
+          email: user.email || "admin@shop.com",
+          specialty: "Administrator",
+        };
+      }
+
+      setProfile(mech);
+      setTickets(Array.isArray(myTickets) ? myTickets : []);
     } catch (err) {
       console.error("Load failed:", err);
-      setMessage("Failed to load profile or tickets.");
+      notify(false, "Failed to load profile or tickets.");
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [token, user, notify]);
 
   useEffect(() => {
     if (token && user) loadData();
-  }, [token, user]);
+  }, [token, user, loadData]);
 
   // === Profile update ===
   const handleSaveProfile = async () => {
+    if (!profile?.id) {
+      notify(false, "No mechanic profile to update.");
+      return;
+    }
     try {
-      await mechanicAPI.update({
-        id: profile.id,
+      await mechanicAPI.update(token, profile.id, {
         name: profile.name,
         email: profile.email,
         specialty: profile.specialty,
       });
-      setMessage("✅ Profile updated");
-    } catch {
-      setMessage("❌ Failed to update profile");
-    }
-  };
-
-  // === Ticket actions ===
-  const handleViewTicket = async (id) => {
-    try {
-      const res = await ticketAPI.getOne(id);
-      alert(
-        `Ticket #${res.data.id}\nStatus: ${res.data.status}\nDescription: ${res.data.description}`
-      );
-    } catch {
-      alert("Failed to load ticket details.");
-    }
-  };
-
-  const handleUpdateTicket = async (id) => {
-    const newStatus = prompt("Enter new status:");
-    if (!newStatus) return;
-    try {
-      await ticketAPI.update({ ticket_id: id, status: newStatus });
-      setMessage("✅ Ticket updated");
-      loadData();
-    } catch {
-      setMessage("❌ Failed to update ticket");
-    }
-  };
-
-  const handleDeleteTicket = async (id) => {
-    if (!window.confirm("Delete this ticket?")) return;
-    try {
-      await ticketAPI.delete(id);
-      setMessage("✅ Ticket deleted");
-      loadData();
-    } catch {
-      setMessage("❌ Failed to delete ticket");
+      notify(true, "Profile updated");
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      notify(false, "Failed to update profile");
     }
   };
 
   const handleDeleteMechanic = async () => {
-    if (!window.confirm("Delete your mechanic account?")) return;
+    if (!profile?.id) {
+      notify(false, "No mechanic profile to delete.");
+      return;
+    }
     try {
-      await mechanicAPI.delete(profile.id);
+      await mechanicAPI.delete(token, profile.id);
+      notify(true, "Mechanic deleted");
+      // if you delete yourself, you’re out — log out cleanly
       logout();
-    } catch {
-      setMessage("❌ Delete failed");
+    } catch (err) {
+      console.error(err);
+      notify(false, "Delete failed");
+    }
+  };
+
+  // === Ticket actions ===
+  const handleRefreshTickets = async () => {
+    try {
+      const res = await mechanicAPI.myTickets(token);
+      const arr = Array.isArray(res) ? res : res?.data || [];
+      setTickets(arr);
+      notify(true, "Tickets refreshed");
+    } catch (err) {
+      console.error(err);
+      notify(false, "Failed to refresh tickets");
+    }
+  };
+
+  const handleUpdateTicketStatus = async (id, newStatus) => {
+    if (!id || !newStatus) return;
+    try {
+      await ticketAPI.update(token, id, { status: newStatus });
+      notify(true, `Ticket #${id} updated`);
+      await handleRefreshTickets();
+    } catch (err) {
+      console.error(err);
+      notify(false, `Failed to update ticket #${id}`);
+    }
+  };
+
+  const handleDeleteTicket = async (id) => {
+    if (!id) return;
+    try {
+      await ticketAPI.delete(token, id);
+      notify(true, `Ticket #${id} deleted`);
+      setTickets((prev) => prev.filter((t) => t.id !== id));
+    } catch (err) {
+      console.error(err);
+      notify(false, `Failed to delete ticket #${id}`);
     }
   };
 
   if (!token) return <p style={{ padding: "2rem" }}>Please log in first.</p>;
-  if (!profile) return <p style={{ padding: "2rem" }}>Loading...</p>;
-
-  const initials = profile.name
-    ? profile.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    : "?";
+  if (loading) return <p style={{ padding: "2rem" }}>Loading...</p>;
+  if (!profile)
+    return (
+      <div className="view-container">
+        <h1>👨‍🔧 Mechanic Profile</h1>
+        {message && (
+          <p
+            style={{
+              color: message.startsWith("✅") ? "limegreen" : "crimson",
+              fontWeight: "bold",
+            }}
+          >
+            {message}
+          </p>
+        )}
+        <p>No mechanic profile found.</p>
+      </div>
+    );
 
   return (
     <div className="view-container">
       <h1>👨‍🔧 Mechanic Profile</h1>
+
       {message && (
         <p
           style={{
@@ -140,27 +214,32 @@ export default function MechanicProfile() {
             alignItems: "center",
             fontSize: "1.5rem",
             fontWeight: "bold",
+            userSelect: "none",
           }}
+          aria-label="Avatar placeholder"
         >
           {initials}
         </div>
 
         <input
           name="name"
-          value={profile.name}
+          value={profile.name || ""}
           onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+          placeholder="Name"
         />
         <input
           name="email"
-          value={profile.email}
+          value={profile.email || ""}
           onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+          placeholder="Email"
         />
         <input
           name="specialty"
-          value={profile.specialty}
+          value={profile.specialty || ""}
           onChange={(e) =>
             setProfile({ ...profile, specialty: e.target.value })
           }
+          placeholder="Specialty"
         />
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -174,10 +253,10 @@ export default function MechanicProfile() {
         </div>
       </div>
 
-      {/* === Ticket Section === */}
+      {/* === Tickets Section === */}
       <section style={{ marginTop: "2rem", width: "100%" }}>
         <h2>🧾 My Tickets</h2>
-        <button onClick={loadData} style={{ marginBottom: "1rem" }}>
+        <button onClick={handleRefreshTickets} style={{ marginBottom: "1rem" }}>
           Refresh
         </button>
 
@@ -189,11 +268,28 @@ export default function MechanicProfile() {
                 <p>{t.description}</p>
                 <p>Status: {t.status}</p>
                 <p>Customer ID: {t.customer_id}</p>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button onClick={() => handleViewTicket(t.id)}>View</button>
-                  <button onClick={() => handleUpdateTicket(t.id)}>
-                    Update
-                  </button>
+
+                {/* Inline status updater (no prompts, no modals) */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
+                    alignItems: "center",
+                    marginTop: "0.5rem",
+                  }}
+                >
+                  <select
+                    defaultValue={t.status || "Open"}
+                    onChange={(e) =>
+                      handleUpdateTicketStatus(t.id, e.target.value)
+                    }
+                    title="Update status"
+                  >
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+
                   <button
                     style={{ backgroundColor: "crimson", color: "white" }}
                     onClick={() => handleDeleteTicket(t.id)}
