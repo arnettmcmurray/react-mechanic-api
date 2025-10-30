@@ -5,8 +5,7 @@ const BASE_URL =
 const TOKEN_KEY = import.meta?.env?.VITE_TOKEN_KEY || "token";
 
 function normalizeMethod(endpoint, method) {
-  if (endpoint.endsWith("/get_all")) return "POST";
-  return method || "GET";
+  return endpoint.endsWith("/get_all") ? "POST" : method || "GET";
 }
 
 function authHeader(token) {
@@ -16,6 +15,7 @@ function authHeader(token) {
   };
 }
 
+// === Generic fetch ===
 export async function fetchWithToken(
   endpoint,
   method = "GET",
@@ -23,9 +23,14 @@ export async function fetchWithToken(
   token = null
 ) {
   const usedMethod = normalizeMethod(endpoint, method);
+  const activeToken = token || localStorage.getItem(TOKEN_KEY);
+  const includeAuth = !!activeToken; // no auth header if missing
+
   let res = await fetch(`${BASE_URL}${endpoint}`, {
     method: usedMethod,
-    headers: authHeader(token || localStorage.getItem(TOKEN_KEY)),
+    headers: includeAuth
+      ? authHeader(activeToken)
+      : { "Content-Type": "application/json" },
     body: body
       ? JSON.stringify(body)
       : usedMethod === "POST" && endpoint.endsWith("/get_all")
@@ -33,7 +38,7 @@ export async function fetchWithToken(
       : null,
   });
 
-  // Safety retry if someone mistakenly hit GET on a POST-only /get_all
+  // Retry safeguard for /get_all
   if (
     res.status === 405 &&
     endpoint.endsWith("/get_all") &&
@@ -41,7 +46,9 @@ export async function fetchWithToken(
   ) {
     res = await fetch(`${BASE_URL}${endpoint}`, {
       method: "POST",
-      headers: authHeader(token || localStorage.getItem(TOKEN_KEY)),
+      headers: includeAuth
+        ? authHeader(activeToken)
+        : { "Content-Type": "application/json" },
       body: body ? JSON.stringify(body) : "{}",
     });
   }
@@ -58,18 +65,10 @@ export async function fetchWithToken(
   }
 }
 
-export function handleApiError(err, setMessage) {
-  console.error(err);
-  const msg = err?.message?.includes("401")
-    ? "❌ Unauthorized — please log in again."
-    : "❌ Server request failed.";
-  if (setMessage) setMessage(msg);
-  return msg;
-}
-
 // === Domain helpers ===
 export const mechanicAPI = {
-  getAll: async () => fetchWithToken("/mechanics/get_all", "POST"),
+  getAll: async (token) =>
+    fetchWithToken("/mechanics/get_all", "POST", null, token),
   getOne: async (id, token) =>
     fetchWithToken(`/mechanics/${id}`, "GET", null, token),
   create: async (token, body) =>
@@ -83,7 +82,8 @@ export const mechanicAPI = {
 };
 
 export const customerAPI = {
-  getAll: async () => fetchWithToken("/customers/get_all", "POST"),
+  getAll: async (token) =>
+    fetchWithToken("/customers/get_all", "POST", null, token),
   getOne: async (id, token) =>
     fetchWithToken(`/customers/${id}`, "GET", null, token),
   create: async (token, body) =>
@@ -95,7 +95,8 @@ export const customerAPI = {
 };
 
 export const inventoryAPI = {
-  getAll: async () => fetchWithToken("/inventory/get_all", "POST"),
+  getAll: async (token) =>
+    fetchWithToken("/inventory/get_all", "POST", null, token),
   create: async (token, body) =>
     fetchWithToken("/inventory", "POST", body, token),
   update: async (token, id, body) =>
@@ -105,7 +106,8 @@ export const inventoryAPI = {
 };
 
 export const ticketAPI = {
-  getAll: async () => fetchWithToken("/service_tickets/get_all", "POST"),
+  getAll: async (token) =>
+    fetchWithToken("/service_tickets/get_all", "POST", null, token),
   getOne: async (id, token) =>
     fetchWithToken(`/service_tickets/${id}`, "GET", null, token),
   create: async (token, body) =>

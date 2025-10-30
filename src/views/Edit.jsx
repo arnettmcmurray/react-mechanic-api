@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "./context/AuthContext.jsx";
-import { mechanicAPI, customerAPI, inventoryAPI, ticketAPI } from "./api/api";
-import "./index.css";
-import DataDump from "./components/DataDump";
+import { useAuth } from "../context/AuthContext.jsx";
+import { mechanicAPI, customerAPI, inventoryAPI, ticketAPI } from "../api/api";
+import "../index.css";
+import DataDump from "../components/DataDump";
 
 export default function AdminConsole() {
   const { token } = useAuth();

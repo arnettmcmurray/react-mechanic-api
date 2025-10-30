@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useAuth } from "./context/AuthContext.jsx";
-import { mechanicAPI, ticketAPI } from "./api/api";
-import MechanicCard from "./components/MechanicCard";
-import "./index.css";
+import { useAuth } from "../context/AuthContext.jsx";
+import { mechanicAPI, ticketAPI } from "../api/api";
+import MechanicCard from "../components/MechanicCard";
+import "../index.css";
 
 export default function Home() {
   const { user, token } = useAuth();
 
   const [mechanics, setMechanics] = useState([]);
   const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const notify = useCallback((ok, text) => {
@@ -23,8 +23,8 @@ export default function Home() {
     setLoading(true);
     try {
       const [mechRes, ticketRes] = await Promise.all([
-        mechanicAPI.getAll(),
-        ticketAPI.getAll(),
+        mechanicAPI.getAll(token),
+        ticketAPI.getAll(token),
       ]);
       setMechanics(asArray(mechRes));
       setTickets(asArray(ticketRes));
@@ -34,10 +34,10 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [notify]);
+  }, [notify, token]);
 
   useEffect(() => {
-    loadData();
+    if (token) loadData();
   }, [token, loadData]);
 
   const mechanicsWithCounts = useMemo(() => {
@@ -64,7 +64,6 @@ export default function Home() {
     return (
       <div className="view-container">
         <h1>🔧 Mechanic Workshop Portal</h1>
-
         {message && (
           <p
             style={{
@@ -75,12 +74,10 @@ export default function Home() {
             {message}
           </p>
         )}
-
         <p style={{ maxWidth: "600px", margin: "0 auto 1.5rem" }}>
           Welcome to the <strong>Mechanic Workshop API Demo</strong>.<br />
           Log in or register below to manage or view service tickets.
         </p>
-
         <div className="demo-card">
           <h3>🔐 Demo Admin Login</h3>
           <p>
@@ -96,7 +93,6 @@ export default function Home() {
             Go to Login
           </button>
         </div>
-
         <div className="demo-card" style={{ marginTop: "1rem" }}>
           <h3>🆕 Register a Mechanic</h3>
           <p>
@@ -109,33 +105,6 @@ export default function Home() {
             Go to Register
           </button>
         </div>
-
-        <h2 style={{ marginTop: "2rem", color: "var(--accent)" }}>
-          Active Mechanics
-        </h2>
-
-        <div className="card-grid">
-          {mechanicsWithCounts.length > 0 ? (
-            mechanicsWithCounts.map((m) => (
-              <MechanicCard
-                key={m.id}
-                mechanic={{
-                  name: m.name,
-                  specialty: m.specialty,
-                  status:
-                    (m.status && String(m.status))?.toLowerCase() === "off"
-                      ? "🔴 Off duty"
-                      : "🟢 Available",
-                  ticketCount: m.ticketCount,
-                  onDuty:
-                    (m.status && String(m.status))?.toLowerCase() !== "off",
-                }}
-              />
-            ))
-          ) : (
-            <p>No mechanics found in database.</p>
-          )}
-        </div>
       </div>
     );
   }
@@ -143,7 +112,6 @@ export default function Home() {
   return (
     <div className="view-container">
       <h1>Shop</h1>
-
       {message && (
         <p
           style={{
@@ -154,7 +122,6 @@ export default function Home() {
           {message}
         </p>
       )}
-
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
         <button
           onClick={loadData}
@@ -170,7 +137,6 @@ export default function Home() {
           🔄 Reload Data
         </button>
       </div>
-
       <h2 style={{ marginTop: "0.5rem" }}>Active Mechanics</h2>
       <div className="card-grid">
         {mechanicsWithCounts.length > 0 ? (

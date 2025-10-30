@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useAuth } from "./context/AuthContext.jsx";
-import { mechanicAPI, ticketAPI } from "./api/api";
-import "./index.css";
+import { useAuth } from "../context/AuthContext.jsx";
+import { mechanicAPI, ticketAPI } from "../api/api";
+import "../index.css";
 
 export default function MechanicProfile() {
   const { user, token, logout } = useAuth();

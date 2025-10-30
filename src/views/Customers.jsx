@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { customerAPI } from "./api/api";
-import GenericCard from "./components/GenericCard";
-import "./index.css";
+import { customerAPI } from "../api/api";
+import GenericCard from "../components/GenericCard";
+import "../index.css";
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);

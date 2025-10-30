@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "./context/AuthContext.jsx";
-import { inventoryAPI } from "./api/api";
-import "./index.css";
+import { useAuth } from "../context/AuthContext.jsx";
+import { inventoryAPI } from "../api/api";
+import "../index.css";
 
 export default function Inventory() {
   const { token } = useAuth();
