@@ -1,12 +1,11 @@
+// === api.js — Aligned to live backend routes (get_all) ===
 const BASE_URL = "https://mechanics-api.onrender.com";
 
-// === Shared Header Builder ===
 const authHeader = (token) => ({
   "Content-Type": "application/json",
   ...(token ? { Authorization: `Bearer ${token}` } : {}),
 });
 
-// === Generic Fetch Helper ===
 async function fetchWithToken(
   endpoint,
   method = "GET",
@@ -19,21 +18,17 @@ async function fetchWithToken(
       headers: authHeader(token),
       body: body ? JSON.stringify(body) : null,
     });
-
     if (!res.ok) {
-      const text = await res.text();
+      const text = await res.text().catch(() => "");
       throw new Error(`HTTP ${res.status}: ${text}`);
     }
-
-    const data = await res.json().catch(() => ({}));
-    return data;
+    return await res.json().catch(() => ({}));
   } catch (err) {
     console.error(`Fetch error @ ${endpoint}:`, err);
     throw err;
   }
 }
 
-// === Error Feedback Helper ===
 export function handleApiError(err, setMessage) {
   console.error(err);
   const msg = err.message?.includes("401")
@@ -45,7 +40,8 @@ export function handleApiError(err, setMessage) {
 
 // === Mechanics ===
 export const mechanicAPI = {
-  getAll: async () => fetchWithToken("/mechanics"),
+  // NOTE: backend exposes /mechanics/get_all
+  getAll: async () => fetchWithToken("/mechanics/get_all"),
   getOne: async (id, token) =>
     fetchWithToken(`/mechanics/${id}`, "GET", null, token),
   create: async (token, body) =>
@@ -60,7 +56,7 @@ export const mechanicAPI = {
 
 // === Customers ===
 export const customerAPI = {
-  getAll: async () => fetchWithToken("/customers"),
+  getAll: async () => fetchWithToken("/customers/get_all"),
   getOne: async (id, token) =>
     fetchWithToken(`/customers/${id}`, "GET", null, token),
   create: async (token, body) =>
@@ -73,7 +69,7 @@ export const customerAPI = {
 
 // === Inventory ===
 export const inventoryAPI = {
-  getAll: async () => fetchWithToken("/inventory"),
+  getAll: async () => fetchWithToken("/inventory/get_all"),
   create: async (token, body) =>
     fetchWithToken("/inventory", "POST", body, token),
   update: async (token, id, body) =>
@@ -84,7 +80,7 @@ export const inventoryAPI = {
 
 // === Service Tickets ===
 export const ticketAPI = {
-  getAll: async () => fetchWithToken("/service_tickets"),
+  getAll: async () => fetchWithToken("/service_tickets/get_all"),
   getOne: async (id, token) =>
     fetchWithToken(`/service_tickets/${id}`, "GET", null, token),
   create: async (token, body) =>
