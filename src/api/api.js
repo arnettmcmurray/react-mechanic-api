@@ -1,11 +1,17 @@
-const BASE_URL =
-  import.meta?.env?.VITE_API_BASE_URL?.trim() ||
-  "https://mechanics-api.onrender.com";
+// Route all calls through Vite proxy for local dev.
+// When deployed, Render will still serve these absolute paths.
+const BASE_URL = "/api";
 
 const TOKEN_KEY = import.meta?.env?.VITE_TOKEN_KEY || "token";
 
 function normalizeMethod(endpoint, method) {
-  return endpoint.endsWith("/get_all") ? "POST" : method || "GET";
+  if (
+    endpoint.endsWith("/get_all") ||
+    endpoint.includes("/my_tickets") ||
+    endpoint.includes("/get_one")
+  )
+    return "POST";
+  return method || "GET";
 }
 
 function authHeader(token) {
@@ -15,7 +21,6 @@ function authHeader(token) {
   };
 }
 
-// === Generic fetch ===
 export async function fetchWithToken(
   endpoint,
   method = "GET",
@@ -24,9 +29,9 @@ export async function fetchWithToken(
 ) {
   const usedMethod = normalizeMethod(endpoint, method);
   const activeToken = token || localStorage.getItem(TOKEN_KEY);
-  const includeAuth = !!activeToken; // no auth header if missing
+  const includeAuth = !!activeToken;
 
-  let res = await fetch(`${BASE_URL}${endpoint}`, {
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
     method: usedMethod,
     headers: includeAuth
       ? authHeader(activeToken)
@@ -35,23 +40,10 @@ export async function fetchWithToken(
       ? JSON.stringify(body)
       : usedMethod === "POST" && endpoint.endsWith("/get_all")
       ? "{}"
+      : usedMethod === "POST" && endpoint.includes("/my_tickets")
+      ? "{}"
       : null,
   });
-
-  // Retry safeguard for /get_all
-  if (
-    res.status === 405 &&
-    endpoint.endsWith("/get_all") &&
-    usedMethod !== "POST"
-  ) {
-    res = await fetch(`${BASE_URL}${endpoint}`, {
-      method: "POST",
-      headers: includeAuth
-        ? authHeader(activeToken)
-        : { "Content-Type": "application/json" },
-      body: body ? JSON.stringify(body) : "{}",
-    });
-  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -70,15 +62,15 @@ export const mechanicAPI = {
   getAll: async (token) =>
     fetchWithToken("/mechanics/get_all", "POST", null, token),
   getOne: async (id, token) =>
-    fetchWithToken(`/mechanics/${id}`, "GET", null, token),
+    fetchWithToken("/mechanics/get_one", "POST", { id }, token),
+  myTickets: async (token) =>
+    fetchWithToken("/mechanics/my_tickets", "POST", {}, token),
   create: async (token, body) =>
     fetchWithToken("/mechanics", "POST", body, token),
   update: async (token, id, body) =>
     fetchWithToken(`/mechanics/${id}`, "PUT", body, token),
   delete: async (token, id) =>
     fetchWithToken(`/mechanics/${id}`, "DELETE", null, token),
-  myTickets: async (token) =>
-    fetchWithToken("/mechanics/my_tickets", "GET", null, token),
 };
 
 export const customerAPI = {
