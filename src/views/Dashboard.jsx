@@ -1,4 +1,3 @@
-// === Dashboard.jsx — Mechanic profile + my tickets + local notes ===
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { mechanicAPI } from "../api/api";
@@ -12,7 +11,6 @@ export default function Dashboard() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // === Load profile + tickets ===
   useEffect(() => {
     if (!token || !user) return;
     const loadData = async () => {
@@ -21,6 +19,8 @@ export default function Dashboard() {
           mechanicAPI.getOne(user.id),
           mechanicAPI.getMyTickets(),
         ]);
+        if (!mechRes.data || !mechRes.data.id)
+          throw new Error("Invalid mechanic data");
         setProfile(mechRes.data);
         setTickets(Array.isArray(ticketRes.data) ? ticketRes.data : []);
       } catch (err) {
@@ -31,13 +31,11 @@ export default function Dashboard() {
     loadData();
   }, [token, user]);
 
-  // === Handle local note save ===
   const handleNoteChange = (e) => {
     setNote(e.target.value);
     localStorage.setItem("mechNote", e.target.value);
   };
 
-  // === Profile change + save ===
   const handleChange = (e) =>
     setProfile({ ...profile, [e.target.name]: e.target.value });
 
@@ -55,6 +53,8 @@ export default function Dashboard() {
         specialty: profile.specialty,
       });
       alertMsg("Profile updated!", true);
+      const updatedTickets = await mechanicAPI.getMyTickets();
+      setTickets(updatedTickets.data || []);
     } catch {
       alertMsg("Failed to save profile.");
     }
@@ -71,10 +71,9 @@ export default function Dashboard() {
   };
 
   if (!token) return <p style={{ padding: "2rem" }}>Please log in first.</p>;
-  if (!profile) return <p style={{ padding: "2rem" }}>Loading...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (!profile) return <p style={{ padding: "2rem" }}>Loading...</p>;
 
-  // === Simple avatar from initials ===
   const initials = profile.name
     ? profile.name
         .split(" ")
@@ -97,7 +96,6 @@ export default function Dashboard() {
         </p>
       )}
 
-      {/* === Profile Section === */}
       <div
         className="mechanic-card"
         style={{
@@ -107,7 +105,6 @@ export default function Dashboard() {
           maxWidth: "500px",
           margin: "1rem auto",
           padding: "1rem",
-          backgroundColor: "var(--card-bg)",
           borderRadius: "12px",
           boxShadow: "0 0 10px rgba(0,0,0,0.2)",
         }}
@@ -115,7 +112,7 @@ export default function Dashboard() {
         <div
           style={{
             alignSelf: "center",
-            backgroundColor: "#444",
+            backgroundColor: "#333",
             color: "white",
             borderRadius: "50%",
             width: "80px",
@@ -172,11 +169,10 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* === Local note (not saved to backend) === */}
         <textarea
           value={note}
           onChange={handleNoteChange}
-          placeholder="Write a short note about yourself (local only)..."
+          placeholder="Write a short note (local only)..."
           style={{
             width: "100%",
             marginTop: "1rem",
@@ -187,25 +183,16 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* === Ticket Section === */}
       <section style={{ marginTop: "2rem", width: "100%" }}>
         <h2>🧾 Your Service Tickets</h2>
         {tickets.length > 0 ? (
           <div className="card-grid">
             {tickets.map((t) => (
               <div key={t.id} className="mechanic-card">
-                <p>
-                  <strong>ID:</strong> {t.id}
-                </p>
-                <p>
-                  <strong>Description:</strong> {t.description}
-                </p>
-                <p>
-                  <strong>Status:</strong> {t.status}
-                </p>
-                <p>
-                  <strong>Customer ID:</strong> {t.customer_id}
-                </p>
+                <h3>Ticket #{t.id}</h3>
+                <p>{t.description}</p>
+                <p>Status: {t.status}</p>
+                <p>Customer ID: {t.customer_id}</p>
               </div>
             ))}
           </div>

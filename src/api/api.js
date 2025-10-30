@@ -1,17 +1,17 @@
 import axios from "axios";
 
-// === Base URL: switch automatically between local dev and Render ===
+// === Base URL: local or production ===
 const API_BASE = import.meta.env.DEV
   ? "/api"
   : "https://mechanics-api.onrender.com";
 
-// === Axios Instance ===
+// === Default Axios Instance ===
 const api = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
 });
 
-// === Auto-attach token from localStorage ===
+// === Auto-attach token for protected routes ===
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -19,10 +19,15 @@ api.interceptors.request.use((config) => {
 });
 
 // ==============================
-// === Mechanics Endpoints ======
+// === Mechanics API ============
 // ==============================
 export const mechanicAPI = {
-  register: (data) => api.post("/mechanics/create", data),
+  // Register uses raw axios to bypass token interceptor
+  register: (data) =>
+    axios.post(`${API_BASE}/mechanics/create`, data, {
+      headers: { "Content-Type": "application/json" },
+    }),
+
   login: (data) => api.post("/mechanics/login", data),
   getAll: () => api.post("/mechanics/get_all", {}),
   getOne: (id) => api.post("/mechanics/get_one", { id }),
@@ -32,7 +37,7 @@ export const mechanicAPI = {
 };
 
 // ==============================
-// === Service Tickets =========
+// === Service Tickets ==========
 // ==============================
 export const ticketAPI = {
   create: (data) => api.post("/service_tickets/create", data),

@@ -1,4 +1,3 @@
-// === Edit.jsx — Admin Console (CRUD + Assign Mechanic to Ticket) ===
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { ticketAPI, mechanicAPI, customerAPI, inventoryAPI } from "../api/api";
@@ -8,7 +7,6 @@ import MechanicForm from "../components/MechanicForm";
 
 export default function Edit() {
   const { token } = useAuth();
-
   const [tickets, setTickets] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [mechanics, setMechanics] = useState([]);
@@ -35,7 +33,6 @@ export default function Edit() {
     setTimeout(() => setMessage(""), 3000);
   };
 
-  // === Load data ===
   const loadAll = async () => {
     try {
       const [tRes, cRes, mRes, pRes] = await Promise.all([
@@ -44,9 +41,18 @@ export default function Edit() {
         mechanicAPI.getAll(),
         inventoryAPI.getAll(),
       ]);
+
+      // Map ticket counts to each mechanic
+      const mechanicsWithCounts = (mRes.data || []).map((m) => {
+        const count = (tRes.data || []).filter(
+          (t) => t.assigned_mechanic_id === m.id
+        ).length;
+        return { ...m, ticketCount: count };
+      });
+
       setTickets(tRes.data || []);
       setCustomers(cRes.data || []);
-      setMechanics(mRes.data || []);
+      setMechanics(mechanicsWithCounts);
       setParts(pRes.data || []);
     } catch (err) {
       console.error("Error loading data:", err);
@@ -61,7 +67,7 @@ export default function Edit() {
   const handleChange = (e) =>
     setForms({ ...forms, [e.target.name]: e.target.value });
 
-  // === CRUD functions (same as before) ===
+  // === CRUD HANDLERS ===
   const handleAddCustomer = async () => {
     try {
       await customerAPI.create({
@@ -77,16 +83,6 @@ export default function Edit() {
     }
   };
 
-  const handleDeleteCustomer = async () => {
-    try {
-      await customerAPI.delete(forms.customer_id);
-      alertMsg("Customer deleted!", true);
-      loadAll();
-    } catch {
-      alertMsg("Failed to delete customer.");
-    }
-  };
-
   const handleAddPart = async () => {
     try {
       await inventoryAPI.create({
@@ -98,16 +94,6 @@ export default function Edit() {
       loadAll();
     } catch {
       alertMsg("Failed to add part.");
-    }
-  };
-
-  const handleDeletePart = async () => {
-    try {
-      await inventoryAPI.delete(forms.part_id);
-      alertMsg("Part deleted!", true);
-      loadAll();
-    } catch {
-      alertMsg("Failed to delete part.");
     }
   };
 
@@ -131,19 +117,6 @@ export default function Edit() {
       loadAll();
     } catch {
       alertMsg("Failed to create ticket.");
-    }
-  };
-
-  const handleAssignTicket = async () => {
-    try {
-      await ticketAPI.assignMechanic({
-        ticket_id: forms.ticket_id,
-        mech_id: forms.mech_id,
-      });
-      alertMsg("Mechanic assigned to ticket!", true);
-      loadAll();
-    } catch {
-      alertMsg("Failed to assign mechanic.");
     }
   };
 
@@ -174,27 +147,16 @@ export default function Edit() {
     }
   };
 
-  const handleDeleteTicket = async () => {
-    try {
-      await ticketAPI.delete(forms.ticket_id);
-      alertMsg("Ticket deleted!", true);
-      loadAll();
-    } catch {
-      alertMsg("Failed to delete ticket.");
-    }
-  };
-
   if (!token) return <p style={{ padding: "2rem" }}>Please log in first.</p>;
 
   return (
-    <div className="view-container">
-      <h1 style={{ textAlign: "center" }}>⚙️ Admin Console</h1>
+    <div className="admin-console">
+      <h1>⚙️ Admin Console</h1>
       {message && (
         <p
           style={{
             color: message.startsWith("✅") ? "limegreen" : "crimson",
             fontWeight: "bold",
-            textAlign: "center",
           }}
         >
           {message}
@@ -202,195 +164,168 @@ export default function Edit() {
       )}
 
       {/* === CUSTOMERS === */}
-      <section className="console-section" style={{ textAlign: "center" }}>
+      <section className="console-section">
         <h2>👥 Customers</h2>
-        <div
-          className="ticket-row"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "0.4rem",
-          }}
-        >
-          <input
-            name="cust_name"
-            placeholder="Customer Name"
-            value={forms.cust_name}
-            onChange={handleChange}
-          />
-          <input
-            name="cust_email"
-            placeholder="Email"
-            value={forms.cust_email}
-            onChange={handleChange}
-          />
-          <input
-            name="cust_phone"
-            placeholder="Phone"
-            value={forms.cust_phone}
-            onChange={handleChange}
-          />
-          <input
-            name="cust_car"
-            placeholder="Car Info"
-            value={forms.cust_car}
-            onChange={handleChange}
-          />
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={handleAddCustomer}>Add</button>
-            <button onClick={handleDeleteCustomer}>Delete</button>
-          </div>
+        <input
+          name="cust_name"
+          placeholder="Name"
+          value={forms.cust_name}
+          onChange={handleChange}
+        />
+        <input
+          name="cust_email"
+          placeholder="Email"
+          value={forms.cust_email}
+          onChange={handleChange}
+        />
+        <input
+          name="cust_phone"
+          placeholder="Phone"
+          value={forms.cust_phone}
+          onChange={handleChange}
+        />
+        <input
+          name="cust_car"
+          placeholder="Car Info"
+          value={forms.cust_car}
+          onChange={handleChange}
+        />
+        <div className="btn-group">
+          <button onClick={handleAddCustomer}>Add</button>
         </div>
       </section>
 
       {/* === PARTS === */}
-      <section className="console-section" style={{ textAlign: "center" }}>
+      <section className="console-section">
         <h2>🧩 Parts Inventory</h2>
-        <div
-          className="ticket-row"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "0.4rem",
-          }}
-        >
-          <input
-            name="part_name"
-            placeholder="Part Name"
-            value={forms.part_name}
-            onChange={handleChange}
-          />
-          <input
-            name="part_price"
-            placeholder="Price"
-            value={forms.part_price}
-            onChange={handleChange}
-          />
-          <input
-            name="part_qty"
-            placeholder="Qty"
-            value={forms.part_qty}
-            onChange={handleChange}
-          />
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={handleAddPart}>Add</button>
-            <button onClick={handleDeletePart}>Delete</button>
-          </div>
+        <input
+          name="part_name"
+          placeholder="Part Name"
+          value={forms.part_name}
+          onChange={handleChange}
+        />
+        <input
+          name="part_price"
+          placeholder="Price"
+          value={forms.part_price}
+          onChange={handleChange}
+        />
+        <input
+          name="part_qty"
+          placeholder="Quantity"
+          value={forms.part_qty}
+          onChange={handleChange}
+        />
+        <div className="btn-group">
+          <button onClick={handleAddPart}>Add</button>
         </div>
       </section>
 
       {/* === MECHANICS === */}
-      <section className="console-section" style={{ textAlign: "center" }}>
+      <section className="console-section">
         <h2>👨‍🔧 Mechanics</h2>
-        <MechanicForm />
-        <div
-          className="ticket-row"
+        <MechanicForm onSave={loadAll} />
+        <select
+          name="mech_id"
+          value={forms.mech_id}
+          onChange={handleChange}
+          style={{ margin: "0.5rem 0", width: "70%", maxWidth: "300px" }}
+        >
+          <option value="">Select Mechanic</option>
+          {mechanics.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name} — {m.specialty}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={handleDeleteMechanic}
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "0.4rem",
+            backgroundColor: "crimson",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            padding: "0.5rem 1rem",
+            fontWeight: 600,
+            cursor: "pointer",
           }}
         >
-          <select name="mech_id" value={forms.mech_id} onChange={handleChange}>
-            <option value="">Select Mechanic</option>
-            {mechanics.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-          <button onClick={handleDeleteMechanic}>Delete Mechanic</button>
+          Delete Mechanic
+        </button>
+
+        <div style={{ marginTop: "1rem", textAlign: "center" }}>
+          <h3>Ticket Summary</h3>
+          {mechanics.length > 0 ? (
+            <ul style={{ listStyle: "none", padding: 0 }}>
+              {mechanics.map((m) => (
+                <li key={m.id}>
+                  {m.name} — {m.ticketCount}{" "}
+                  {m.ticketCount === 1 ? "ticket" : "tickets"}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No mechanics found.</p>
+          )}
         </div>
       </section>
 
       {/* === TICKETS === */}
-      <section className="console-section" style={{ textAlign: "center" }}>
+      <section className="console-section">
         <h2>🧾 Tickets</h2>
-        <div
-          className="ticket-row"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "0.4rem",
-          }}
+        <select
+          name="ticket_id"
+          value={forms.ticket_id}
+          onChange={handleChange}
         >
-          <select
-            name="ticket_id"
-            value={forms.ticket_id}
-            onChange={handleChange}
-          >
-            <option value="">Select Ticket</option>
-            {tickets.map((t) => (
-              <option key={t.id} value={t.id}>
-                #{t.id} - {t.description}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="customer_id"
-            value={forms.customer_id}
-            onChange={handleChange}
-          >
-            <option value="">Select Customer</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-
-          <select name="part_id" value={forms.part_id} onChange={handleChange}>
-            <option value="">Select Part</option>
-            {parts.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-
-          <select name="mech_id" value={forms.mech_id} onChange={handleChange}>
-            <option value="">Assign Mechanic</option>
-            {mechanics.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-
-          <input
-            name="description"
-            placeholder="Description"
-            value={forms.description}
-            onChange={handleChange}
-          />
-          <input
-            name="status"
-            placeholder="Status (Open/In Progress/Closed)"
-            value={forms.status}
-            onChange={handleChange}
-          />
-
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={handleCreateTicket}>Create</button>
-            <button onClick={handleAssignTicket}>Assign</button>
-            <button onClick={handleAddPartToTicket}>Add Part</button>
-            <button onClick={handleUpdateTicket}>Update</button>
-            <button onClick={handleDeleteTicket}>Delete</button>
-          </div>
+          <option value="">Select Ticket</option>
+          {tickets.map((t) => (
+            <option key={t.id} value={t.id}>
+              #{t.id} - {t.description}
+            </option>
+          ))}
+        </select>
+        <select
+          name="customer_id"
+          value={forms.customer_id}
+          onChange={handleChange}
+        >
+          <option value="">Select Customer</option>
+          {customers.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <select name="part_id" value={forms.part_id} onChange={handleChange}>
+          <option value="">Select Part</option>
+          {parts.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+        <input
+          name="description"
+          placeholder="Description"
+          value={forms.description}
+          onChange={handleChange}
+        />
+        <input
+          name="status"
+          placeholder="Status"
+          value={forms.status}
+          onChange={handleChange}
+        />
+        <div className="btn-group">
+          <button onClick={handleCreateTicket}>Create</button>
+          <button onClick={handleAddPartToTicket}>Add Part</button>
+          <button onClick={handleUpdateTicket}>Update</button>
         </div>
       </section>
 
-      {/* === Data Viewer Section === */}
-      <section
-        className="data-viewer"
-        style={{ textAlign: "center", marginTop: "2rem" }}
-      >
-        <h3 style={{ textAlign: "center" }}>🧩 Data Viewer</h3>
+      <section className="console-section">
+        <h2>🧠 Data Viewer</h2>
         <DataDump />
       </section>
     </div>

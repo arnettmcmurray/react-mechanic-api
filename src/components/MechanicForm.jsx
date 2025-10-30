@@ -16,21 +16,24 @@ export default function MechanicForm({ mechanic, onSave }) {
     e.preventDefault();
     try {
       let res;
-      if (mechanic) {
-        res = await mechanicAPI.update(mechanic.id, formData);
+      if (mechanic && mechanic.id) {
+        res = await mechanicAPI.update({ id: mechanic.id, ...formData });
       } else {
         res = await mechanicAPI.register(formData);
       }
-      onSave(res.data);
+
+      if (onSave) onSave(res.data);
       setFormData({ name: "", email: "", password: "", specialty: "" });
     } catch (err) {
       console.error("Error saving mechanic:", err);
+      alert("Failed to save mechanic. Check console for details.");
     }
   };
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
       <h2>{mechanic ? "Update Mechanic" : "Register Mechanic"}</h2>
+
       <input
         type="text"
         name="name"
@@ -39,6 +42,7 @@ export default function MechanicForm({ mechanic, onSave }) {
         onChange={handleChange}
         required
       />
+
       <input
         type="email"
         name="email"
@@ -47,14 +51,18 @@ export default function MechanicForm({ mechanic, onSave }) {
         onChange={handleChange}
         required
       />
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        value={formData.password}
-        onChange={handleChange}
-        required={!mechanic}
-      />
+
+      {!mechanic && (
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+        />
+      )}
+
       <input
         type="text"
         name="specialty"
@@ -63,6 +71,7 @@ export default function MechanicForm({ mechanic, onSave }) {
         onChange={handleChange}
         required
       />
+
       <button type="submit">{mechanic ? "Update" : "Register"}</button>
     </form>
   );

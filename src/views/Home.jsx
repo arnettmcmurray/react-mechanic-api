@@ -1,61 +1,54 @@
+// === Home.jsx — Phase 2: Mechanic Dashboard / Shop View ===
 import { useEffect, useState } from "react";
-import MechanicCard from "../components/MechanicCard";
-import api from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { mechanicAPI, ticketAPI } from "../api/api";
+import MechanicCard from "../components/MechanicCard";
+import "../index.css";
 
 export default function Home() {
   const { user, token } = useAuth();
   const [mechanics, setMechanics] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  // === Fetch Mechanics ===
-  const fetchMechanics = async () => {
-    try {
-      const res = await api.get("/mechanics/get_all");
-      if (Array.isArray(res.data)) setMechanics(res.data);
-    } catch (err) {
-      console.error("Error fetching mechanics:", err);
-      setError("Could not load mechanics.");
-    }
-  };
-
-  // === Fetch Tickets ===
-  const fetchTickets = async () => {
-    if (!token) return;
-    try {
-      const res = await api.get("/service_tickets/get_all");
-      if (Array.isArray(res.data)) setTickets(res.data);
-      else if (res.data.message) setError(res.data.message);
-    } catch (err) {
-      console.error("Error fetching tickets:", err);
-      setError("Could not load tickets.");
-    }
-  };
-
-  // === Reload Handler ===
-  const handleReload = async () => {
-    setLoading(true);
-    await Promise.all([fetchMechanics(), fetchTickets()]);
-    setLoading(false);
-  };
-
-  // === Initial Load ===
+  // === Load mechanics and tickets ===
   useEffect(() => {
-    handleReload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const loadData = async () => {
+      try {
+        const [mechRes, ticketRes] = await Promise.all([
+          mechanicAPI.getAll(),
+          ticketAPI.getAll(),
+        ]);
+        setMechanics(mechRes.data || []);
+        setTickets(ticketRes.data || []);
+      } catch (err) {
+        console.error("Error loading data:", err);
+        setError("⚠️ Could not load data from server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [token]);
 
-  // === Logged-out View ===
+  // === Cross-map ticket counts per mechanic ===
+  const mechanicsWithCounts = mechanics.map((m) => {
+    const count = tickets.filter((t) => t.mech_id === m.id).length;
+    return { ...m, ticketCount: count };
+  });
+
+  if (loading)
+    return <p style={{ textAlign: "center", marginTop: "4rem" }}>Loading...</p>;
+
+  // === Logged-out View (Public Dashboard) ===
   if (!user) {
     return (
       <div className="view-container">
         <h1>🔧 Mechanic Workshop Portal</h1>
         <p style={{ maxWidth: "600px", margin: "0 auto 1.5rem" }}>
           Welcome to the <strong>Mechanic Workshop API Demo</strong>.<br />
-          Log in using the demo credentials below or register your own mechanic
-          account to explore the system.
+          Log in or register below to manage or view service tickets.
         </p>
 
         {error && <p style={{ color: "red" }}>{error}</p>}
@@ -79,8 +72,7 @@ export default function Home() {
         <div className="demo-card" style={{ marginTop: "1rem" }}>
           <h3>🆕 Register a Mechanic</h3>
           <p>
-            New here? Hit Register to create your account, then return to view
-            your assigned tickets.
+            Register to create your own mechanic profile and get assigned jobs.
           </p>
           <button
             className="demo-login-btn"
@@ -90,17 +82,20 @@ export default function Home() {
           </button>
         </div>
 
-        <h2 style={{ marginTop: "2rem" }}>Active Mechanics</h2>
+        <h2 style={{ marginTop: "2rem", color: "var(--accent)" }}>
+          Active Mechanics
+        </h2>
+
         <div className="card-grid">
-          {mechanics.length > 0 ? (
-            mechanics.map((m) => (
+          {mechanicsWithCounts.length > 0 ? (
+            mechanicsWithCounts.map((m) => (
               <MechanicCard
                 key={m.id}
                 mechanic={{
                   name: m.name,
                   specialty: m.specialty,
                   status: "🟢 Available",
-                  ticketCount: m.ticket_count || 0,
+                  ticketCount: m.ticketCount,
                   onDuty: true,
                 }}
               />
@@ -113,18 +108,17 @@ export default function Home() {
     );
   }
 
-  // === Logged-in View ===
+  // === Logged-in View (Mechanic Dashboard) ===
   return (
     <div className="view-container">
       <h1>Welcome back, {user.name}!</h1>
-      <p>Your current tickets:</p>
+      <p>Your current service tickets:</p>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
       {!error && tickets.length === 0 && <p>No active service tickets yet.</p>}
 
       <button
-        onClick={handleReload}
-        disabled={loading}
+        onClick={() => window.location.reload()}
         style={{
           marginBottom: "1rem",
           backgroundColor: "limegreen",
@@ -135,7 +129,7 @@ export default function Home() {
           fontWeight: "bold",
         }}
       >
-        {loading ? "Refreshing..." : "🔄 Reload Data"}
+        🔄 Reload Data
       </button>
 
       <div className="card-grid">
