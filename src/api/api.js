@@ -66,50 +66,61 @@ export const mechanicAPI = {
   myTickets: async (token) =>
     fetchWithToken("/mechanics/my_tickets", "POST", {}, token),
   create: async (token, body) =>
-    fetchWithToken("/mechanics", "POST", body, token),
-  update: async (token, id, body) =>
-    fetchWithToken(`/mechanics/${id}`, "PUT", body, token),
+    fetchWithToken("/mechanics/create", "POST", body, token),
+  update: async (token, body) =>
+    fetchWithToken("/mechanics/update", "PUT", body, token),
   delete: async (token, id) =>
-    fetchWithToken(`/mechanics/${id}`, "DELETE", null, token),
+    fetchWithToken("/mechanics/delete", "DELETE", { id }, token),
 };
 
 export const customerAPI = {
   getAll: async (token) =>
     fetchWithToken("/customers/get_all", "POST", null, token),
   getOne: async (id, token) =>
-    fetchWithToken(`/customers/${id}`, "GET", null, token),
+    fetchWithToken("/customers/get_one", "POST", { id }, token),
   create: async (token, body) =>
-    fetchWithToken("/customers", "POST", body, token),
-  update: async (token, id, body) =>
-    fetchWithToken(`/customers/${id}`, "PUT", body, token),
+    fetchWithToken("/customers/create", "POST", body, token),
+  update: async (token, body) =>
+    fetchWithToken("/customers/update", "PUT", body, token),
   delete: async (token, id) =>
-    fetchWithToken(`/customers/${id}`, "DELETE", null, token),
+    fetchWithToken("/customers/delete", "DELETE", { id }, token),
 };
 
 export const inventoryAPI = {
   getAll: async (token) =>
     fetchWithToken("/inventory/get_all", "POST", null, token),
   create: async (token, body) =>
-    fetchWithToken("/inventory", "POST", body, token),
-  update: async (token, id, body) =>
-    fetchWithToken(`/inventory/${id}`, "PUT", body, token),
+    fetchWithToken("/inventory/create", "POST", body, token),
+  update: async (token, body) =>
+    fetchWithToken("/inventory/update", "PUT", body, token),
   delete: async (token, id) =>
-    fetchWithToken(`/inventory/${id}`, "DELETE", null, token),
+    fetchWithToken("/inventory/delete", "DELETE", { id }, token),
 };
 
 export const ticketAPI = {
   getAll: async (token) =>
     fetchWithToken("/service_tickets/get_all", "POST", null, token),
   getOne: async (id, token) =>
-    fetchWithToken(`/service_tickets/${id}`, "GET", null, token),
+    fetchWithToken(
+      "/service_tickets/get_one",
+      "POST",
+      { ticket_id: id },
+      token
+    ),
   create: async (token, body) =>
-    fetchWithToken("/service_tickets", "POST", body, token),
-  update: async (token, id, body) =>
-    fetchWithToken(`/service_tickets/${id}`, "PUT", body, token),
+    fetchWithToken("/service_tickets/create", "POST", body, token),
+  update: async (token, body) =>
+    fetchWithToken("/service_tickets/update", "PUT", body, token),
   delete: async (token, id) =>
-    fetchWithToken(`/service_tickets/${id}`, "DELETE", null, token),
+    fetchWithToken(
+      "/service_tickets/delete",
+      "DELETE",
+      { ticket_id: id },
+      token
+    ),
   assign: async (token, body) =>
     fetchWithToken("/service_tickets/assign", "POST", body, token),
   addParts: async (token, body) =>
     fetchWithToken("/service_tickets/add_parts", "POST", body, token),
 };
+  

@@ -110,7 +110,7 @@ export function AuthProvider({ children }) {
     setError("");
     setLoading(true);
     try {
-      await postJson(`${BASE_URL}/mechanics`, {
+      await postJson(`${BASE_URL}/mechanics/create`, {
         name,
         email,
         password,

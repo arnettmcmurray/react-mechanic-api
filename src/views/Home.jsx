@@ -42,15 +42,30 @@ export default function Home() {
 
   const mechanicsWithCounts = useMemo(() => {
     if (!mechanics?.length) return [];
+
     const openTickets = (tickets || []).filter(
       (t) => (t.status || "Open").toLowerCase() !== "closed"
     );
+
     const byMech = new Map();
+
     for (const t of openTickets) {
-      const mid = t.assigned_mechanic_id ?? t.mech_id;
-      if (!mid) continue;
-      byMech.set(mid, (byMech.get(mid) || 0) + 1);
+      // handle array of mechanics per ticket
+      if (Array.isArray(t.mechanics)) {
+        for (const mech of t.mechanics) {
+          if (!mech?.id) continue;
+          byMech.set(mech.id, (byMech.get(mech.id) || 0) + 1);
+        }
+      }
+      // fallback if API returns single mechanic id
+      else if (t.assigned_mechanic_id) {
+        byMech.set(
+          t.assigned_mechanic_id,
+          (byMech.get(t.assigned_mechanic_id) || 0) + 1
+        );
+      }
     }
+
     return mechanics.map((m) => ({
       ...m,
       ticketCount: byMech.get(m.id) || 0,
