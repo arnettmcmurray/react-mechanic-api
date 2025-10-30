@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
-import { mechanicAPI, customerAPI, inventoryAPI, ticketAPI } from "../api/api";
-import "../index.css";
-import DataDump from "../components/DataDump";
+import { useAuth } from "./context/AuthContext.jsx";
+import { mechanicAPI, customerAPI, inventoryAPI, ticketAPI } from "./api/api";
+import "./index.css";
+import DataDump from "./components/DataDump";
 
 export default function AdminConsole() {
   const { token } = useAuth();
@@ -52,7 +52,6 @@ export default function AdminConsole() {
     if (token) loadAll();
   }, [token, loadAll]);
 
-  // === CRUD helpers mapped to api.js ===
   // Customers
   const createCustomer = async () => {
     try {
@@ -103,7 +102,7 @@ export default function AdminConsole() {
       await mechanicAPI.create(token, {
         name: form.name,
         email: form.email,
-        password: form.password, // backend should hash
+        password: form.password,
         specialty: form.specialty,
       });
       notify(true, "Mechanic created");
@@ -189,7 +188,6 @@ export default function AdminConsole() {
         description: form.description,
         status: form.status || "Open",
         customer_id: Number(form.customer_id),
-        // align to backend contract; fall back included for older seeds
         assigned_mechanic_id:
           Number(form.assigned_mechanic_id) || Number(form.mech_id) || null,
       });

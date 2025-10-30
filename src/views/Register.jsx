@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
-import "../index.css";
+import "./index.css";
 
 export default function Register() {
   const { register } = useAuth();
@@ -19,12 +19,9 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await register(formData);
-      navigate("/login");
-    } catch {
-      setError("Registration failed. Try again.");
-    }
+    const ok = await register(formData);
+    if (ok) navigate("/login");
+    else setError("Registration failed. Try again.");
   };
 
   return (

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { customerAPI } from "../api/api";
-import GenericCard from "../components/GenericCard";
-import "../index.css";
+import { customerAPI } from "./api/api";
+import GenericCard from "./components/GenericCard";
+import "./index.css";
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -9,8 +9,9 @@ export default function Customers() {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const res = await customerAPI.getAll();
-        setCustomers(res.data || []);
+        const res = await customerAPI.getAll(); // POST enforced
+        const arr = Array.isArray(res) ? res : res?.data || [];
+        setCustomers(arr);
       } catch (err) {
         console.error("Error fetching customers:", err);
       }

@@ -10,7 +10,6 @@ const NavBar = () => {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [openCount, setOpenCount] = useState(0);
 
-  // === Theme handling (no design change) ===
   const applyTheme = useCallback(
     (t) => document.documentElement.setAttribute("data-theme", t),
     []
@@ -24,16 +23,14 @@ const NavBar = () => {
     applyTheme(next);
   };
 
-  // Normalize any API shape => array
   const asArray = useMemo(
     () => (res) => Array.isArray(res) ? res : res?.data || res?.tickets || [],
     []
   );
 
-  // === Live ticket badge ===
   const refreshBadge = useCallback(async () => {
     try {
-      const res = await ticketAPI.getAll();
+      const res = await ticketAPI.getAll(); // POST enforced in api.js
       const arr = asArray(res);
       const open = arr.filter(
         (t) => String(t.status || "Open").toLowerCase() !== "closed"
@@ -88,6 +85,9 @@ const NavBar = () => {
             </Link>
             <Link to="/inventory" className="nav-link">
               Inventory
+            </Link>
+            <Link to="/customers" className="nav-link">
+              Customers
             </Link>
             <button className="nav-btn" onClick={handleLogout}>
               Logout

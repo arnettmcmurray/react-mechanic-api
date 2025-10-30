@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
-import { mechanicAPI, ticketAPI } from "../api/api";
-import "../index.css";
+import { useAuth } from "./context/AuthContext.jsx";
+import { mechanicAPI, ticketAPI } from "./api/api";
+import "./index.css";
 
 export default function MechanicProfile() {
   const { user, token, logout } = useAuth();
@@ -28,9 +28,6 @@ export default function MechanicProfile() {
     );
   }, [profile?.name, user?.name]);
 
-  // Resolve mechanic for logged-in user:
-  // 1) try /mechanics/:user.id
-  // 2) fallback to /mechanics/get_all and match by email
   const resolveMechanicForUser = useCallback(
     async (u) => {
       try {
@@ -38,7 +35,7 @@ export default function MechanicProfile() {
         const mech = got?.id ? got : got?.data || null;
         if (mech?.id) return mech;
       } catch {
-        // ignore, try by email
+        /* try by email next */
       }
       try {
         const all = await mechanicAPI.getAll();
@@ -61,10 +58,7 @@ export default function MechanicProfile() {
     if (!token || !user) return;
     setLoading(true);
     try {
-      // map account -> mechanic row
       let mechObj = await resolveMechanicForUser(user);
-
-      // if nothing, show display-only admin profile
       if (!mechObj) {
         mechObj = {
           id: user.id,
@@ -74,7 +68,6 @@ export default function MechanicProfile() {
         };
       }
 
-      // tickets (admin may get empty list)
       let myTickets = [];
       try {
         const res = await mechanicAPI.myTickets(token);

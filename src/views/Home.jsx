@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
-import { mechanicAPI, ticketAPI } from "../api/api";
-import MechanicCard from "../components/MechanicCard";
-import "../index.css";
+import { useAuth } from "./context/AuthContext.jsx";
+import { mechanicAPI, ticketAPI } from "./api/api";
+import MechanicCard from "./components/MechanicCard";
+import "./index.css";
 
 export default function Home() {
   const { user, token } = useAuth();
@@ -17,7 +17,6 @@ export default function Home() {
     setTimeout(() => setMessage(""), 3000);
   }, []);
 
-  // Normalize any API shape -> array
   const asArray = (res) => (Array.isArray(res) ? res : res?.data || []);
 
   const loadData = useCallback(async () => {
@@ -38,11 +37,9 @@ export default function Home() {
   }, [notify]);
 
   useEffect(() => {
-    // Always call the live API, regardless of local vs prod
     loadData();
   }, [token, loadData]);
 
-  // Map open ticket counts by assigned_mechanic_id (not mech_id)
   const mechanicsWithCounts = useMemo(() => {
     if (!mechanics?.length) return [];
     const openTickets = (tickets || []).filter(
@@ -50,7 +47,7 @@ export default function Home() {
     );
     const byMech = new Map();
     for (const t of openTickets) {
-      const mid = t.assigned_mechanic_id ?? t.mech_id; // fallback if older data exists
+      const mid = t.assigned_mechanic_id ?? t.mech_id;
       if (!mid) continue;
       byMech.set(mid, (byMech.get(mid) || 0) + 1);
     }
@@ -63,7 +60,6 @@ export default function Home() {
   if (loading)
     return <p style={{ textAlign: "center", marginTop: "4rem" }}>Loading...</p>;
 
-  // === Logged-out View (Public) ===
   if (!user) {
     return (
       <div className="view-container">
@@ -144,7 +140,6 @@ export default function Home() {
     );
   }
 
-  // === Logged-in View (Shop dashboard for any role) ===
   return (
     <div className="view-container">
       <h1>Shop</h1>

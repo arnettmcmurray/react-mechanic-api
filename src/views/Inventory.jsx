@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
-import { inventoryAPI } from "../api/api";
-import "../index.css";
+import { useAuth } from "./context/AuthContext.jsx";
+import { inventoryAPI } from "./api/api";
+import "./index.css";
 
 export default function Inventory() {
   const { token } = useAuth();
@@ -12,8 +12,9 @@ export default function Inventory() {
     if (!token) return;
     const fetchParts = async () => {
       try {
-        const res = await inventoryAPI.getAll();
-        setParts(Array.isArray(res.data) ? res.data : []);
+        const res = await inventoryAPI.getAll(); // POST enforced
+        const arr = Array.isArray(res) ? res : res?.data || [];
+        setParts(arr);
       } catch (err) {
         console.error("Error fetching parts:", err);
         setError("Failed to load data from server.");

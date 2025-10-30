@@ -1,47 +1,75 @@
-// === api.js — Aligned to live backend routes (get_all) ===
-const BASE_URL = "https://mechanics-api.onrender.com";
+const BASE_URL =
+  import.meta?.env?.VITE_API_BASE_URL?.trim() ||
+  "https://mechanics-api.onrender.com";
 
-const authHeader = (token) => ({
-  "Content-Type": "application/json",
-  ...(token ? { Authorization: `Bearer ${token}` } : {}),
-});
+const TOKEN_KEY = import.meta?.env?.VITE_TOKEN_KEY || "token";
 
-async function fetchWithToken(
+function normalizeMethod(endpoint, method) {
+  if (endpoint.endsWith("/get_all")) return "POST";
+  return method || "GET";
+}
+
+function authHeader(token) {
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+export async function fetchWithToken(
   endpoint,
   method = "GET",
   body = null,
   token = null
 ) {
-  try {
-    const res = await fetch(`${BASE_URL}${endpoint}`, {
-      method,
-      headers: authHeader(token),
-      body: body ? JSON.stringify(body) : null,
+  const usedMethod = normalizeMethod(endpoint, method);
+  let res = await fetch(`${BASE_URL}${endpoint}`, {
+    method: usedMethod,
+    headers: authHeader(token || localStorage.getItem(TOKEN_KEY)),
+    body: body
+      ? JSON.stringify(body)
+      : usedMethod === "POST" && endpoint.endsWith("/get_all")
+      ? "{}"
+      : null,
+  });
+
+  // Safety retry if someone mistakenly hit GET on a POST-only /get_all
+  if (
+    res.status === 405 &&
+    endpoint.endsWith("/get_all") &&
+    usedMethod !== "POST"
+  ) {
+    res = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers: authHeader(token || localStorage.getItem(TOKEN_KEY)),
+      body: body ? JSON.stringify(body) : "{}",
     });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status}: ${text}`);
-    }
-    return await res.json().catch(() => ({}));
-  } catch (err) {
-    console.error(`Fetch error @ ${endpoint}:`, err);
-    throw err;
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+
+  try {
+    return await res.json();
+  } catch {
+    return {};
   }
 }
 
 export function handleApiError(err, setMessage) {
   console.error(err);
-  const msg = err.message?.includes("401")
+  const msg = err?.message?.includes("401")
     ? "❌ Unauthorized — please log in again."
     : "❌ Server request failed.";
   if (setMessage) setMessage(msg);
   return msg;
 }
 
-// === Mechanics ===
+// === Domain helpers ===
 export const mechanicAPI = {
-  // NOTE: backend exposes /mechanics/get_all
-  getAll: async () => fetchWithToken("/mechanics/get_all"),
+  getAll: async () => fetchWithToken("/mechanics/get_all", "POST"),
   getOne: async (id, token) =>
     fetchWithToken(`/mechanics/${id}`, "GET", null, token),
   create: async (token, body) =>
@@ -54,9 +82,8 @@ export const mechanicAPI = {
     fetchWithToken("/mechanics/my_tickets", "GET", null, token),
 };
 
-// === Customers ===
 export const customerAPI = {
-  getAll: async () => fetchWithToken("/customers/get_all"),
+  getAll: async () => fetchWithToken("/customers/get_all", "POST"),
   getOne: async (id, token) =>
     fetchWithToken(`/customers/${id}`, "GET", null, token),
   create: async (token, body) =>
@@ -67,9 +94,8 @@ export const customerAPI = {
     fetchWithToken(`/customers/${id}`, "DELETE", null, token),
 };
 
-// === Inventory ===
 export const inventoryAPI = {
-  getAll: async () => fetchWithToken("/inventory/get_all"),
+  getAll: async () => fetchWithToken("/inventory/get_all", "POST"),
   create: async (token, body) =>
     fetchWithToken("/inventory", "POST", body, token),
   update: async (token, id, body) =>
@@ -78,9 +104,8 @@ export const inventoryAPI = {
     fetchWithToken(`/inventory/${id}`, "DELETE", null, token),
 };
 
-// === Service Tickets ===
 export const ticketAPI = {
-  getAll: async () => fetchWithToken("/service_tickets/get_all"),
+  getAll: async () => fetchWithToken("/service_tickets/get_all", "POST"),
   getOne: async (id, token) =>
     fetchWithToken(`/service_tickets/${id}`, "GET", null, token),
   create: async (token, body) =>
