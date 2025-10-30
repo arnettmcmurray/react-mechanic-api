@@ -52,4 +52,37 @@ To run the React frontend locally while connecting to the live backend:
 ```bash
 npm install
 npm run dev
+Then open:
+👉 http://localhost:5173
+
+Vite proxy automatically routes /api requests to:
+https://mechanics-api.onrender.com
+
+🧪 Features Summary
+Create and delete mechanics (via Console)
+
+Manage parts and customers
+
+View all service tickets in dedicated “Tickets” tab
+
+Mechanic profile displays individual assigned tickets
+
+Handles Render’s rate limit gracefully (HTTP 429)
+
+Clean, responsive layout for grading visibility
+
+🚀 Deployment Info
+Frontend: React app (GitHub repo below)
+
+Backend: Flask API deployed on Render
+
+Database: PostgreSQL (Render)
+
+GitHub Repository:
+👉 https://github.com/arnettmcmurray/react_mechanic_api
+
+🧾 Instructor Reference
+Backend tested and verified via Swagger.
+Frontend tested locally with Vite proxy → Render backend connection.
+All CRUD functionality operational once rate limit resets.
 ```
