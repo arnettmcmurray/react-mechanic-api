@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
 import { mechanicAPI } from "../api/api";
 
 export default function MechanicForm({ mechanic, onSave }) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: mechanic?.name || "",
     email: mechanic?.email || "",
@@ -14,12 +16,19 @@ export default function MechanicForm({ mechanic, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // only allow admins to register mechanics
+    if (user && user.role !== "admin") {
+      alert("Only admins can register mechanics.");
+      return;
+    }
+
     try {
       let res;
       if (mechanic && mechanic.id) {
         res = await mechanicAPI.update({ id: mechanic.id, ...formData });
       } else {
-        res = await mechanicAPI.register(formData);
+        res = await mechanicAPI.create(formData);
       }
 
       if (onSave) onSave(res.data);

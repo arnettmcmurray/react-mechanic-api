@@ -46,17 +46,17 @@ const NavBar = () => {
             <Link to="/" className="nav-link">
               Shop
             </Link>
-            <Link to="/dashboard" className="nav-link">
+            <Link to="/mechanic/profile" className="nav-link">
               Mechanic
             </Link>
-            <Link to="/edit" className="nav-link">
+            <Link to="/console" className="nav-link">
               Console
             </Link>
             <Link to="/inventory" className="nav-link">
               Inventory
             </Link>
             <button className="nav-btn" onClick={handleLogout}>
-              Logout ({user?.name || "Mechanic"})
+              Logout
             </button>
           </>
         )}

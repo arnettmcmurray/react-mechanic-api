@@ -1,50 +1,35 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { mechanicAPI } from "../api/api";
+import { mechanicAPI, ticketAPI } from "../api/api";
 import "../index.css";
 
-export default function Dashboard() {
+export default function MechanicProfile() {
   const { user, token, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [tickets, setTickets] = useState([]);
-  const [note, setNote] = useState(localStorage.getItem("mechNote") || "");
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+
+  // === Load mechanic + tickets ===
+  const loadData = async () => {
+    try {
+      const [mechRes, ticketRes] = await Promise.all([
+        mechanicAPI.getOne(user.id),
+        mechanicAPI.getMyTickets(),
+      ]);
+      setProfile(mechRes.data);
+      setTickets(ticketRes.data || []);
+    } catch (err) {
+      console.error("Load failed:", err);
+      setMessage("Failed to load profile or tickets.");
+    }
+  };
 
   useEffect(() => {
-    if (!token || !user) return;
-    const loadData = async () => {
-      try {
-        const [mechRes, ticketRes] = await Promise.all([
-          mechanicAPI.getOne(user.id),
-          mechanicAPI.getMyTickets(),
-        ]);
-        if (!mechRes.data || !mechRes.data.id)
-          throw new Error("Invalid mechanic data");
-        setProfile(mechRes.data);
-        setTickets(Array.isArray(ticketRes.data) ? ticketRes.data : []);
-      } catch (err) {
-        console.error("Dashboard load fail:", err);
-        setError("Failed to load your data.");
-      }
-    };
-    loadData();
+    if (token && user) loadData();
   }, [token, user]);
 
-  const handleNoteChange = (e) => {
-    setNote(e.target.value);
-    localStorage.setItem("mechNote", e.target.value);
-  };
-
-  const handleChange = (e) =>
-    setProfile({ ...profile, [e.target.name]: e.target.value });
-
-  const alertMsg = (msg, good = false) => {
-    setMessage(good ? `✅ ${msg}` : `❌ ${msg}`);
-    setTimeout(() => setMessage(""), 3000);
-  };
-
-  const handleSave = async () => {
+  // === Profile update ===
+  const handleSaveProfile = async () => {
     try {
       await mechanicAPI.update({
         id: profile.id,
@@ -52,11 +37,44 @@ export default function Dashboard() {
         email: profile.email,
         specialty: profile.specialty,
       });
-      alertMsg("Profile updated!", true);
-      const updatedTickets = await mechanicAPI.getMyTickets();
-      setTickets(updatedTickets.data || []);
+      setMessage("✅ Profile updated");
     } catch {
-      alertMsg("Failed to save profile.");
+      setMessage("❌ Failed to update profile");
+    }
+  };
+
+  // === Ticket actions ===
+  const handleViewTicket = async (id) => {
+    try {
+      const res = await ticketAPI.getOne(id);
+      alert(
+        `Ticket #${res.data.id}\nStatus: ${res.data.status}\nDescription: ${res.data.description}`
+      );
+    } catch {
+      alert("Failed to load ticket details.");
+    }
+  };
+
+  const handleUpdateTicket = async (id) => {
+    const newStatus = prompt("Enter new status:");
+    if (!newStatus) return;
+    try {
+      await ticketAPI.update({ ticket_id: id, status: newStatus });
+      setMessage("✅ Ticket updated");
+      loadData();
+    } catch {
+      setMessage("❌ Failed to update ticket");
+    }
+  };
+
+  const handleDeleteTicket = async (id) => {
+    if (!window.confirm("Delete this ticket?")) return;
+    try {
+      await ticketAPI.delete(id);
+      setMessage("✅ Ticket deleted");
+      loadData();
+    } catch {
+      setMessage("❌ Failed to delete ticket");
     }
   };
 
@@ -66,12 +84,11 @@ export default function Dashboard() {
       await mechanicAPI.delete(profile.id);
       logout();
     } catch {
-      alertMsg("Delete failed.");
+      setMessage("❌ Delete failed");
     }
   };
 
   if (!token) return <p style={{ padding: "2rem" }}>Please log in first.</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
   if (!profile) return <p style={{ padding: "2rem" }}>Loading...</p>;
 
   const initials = profile.name
@@ -84,7 +101,7 @@ export default function Dashboard() {
 
   return (
     <div className="view-container">
-      <h1>👨‍🔧 Mechanic Dashboard</h1>
+      <h1>👨‍🔧 Mechanic Profile</h1>
       {message && (
         <p
           style={{
@@ -96,6 +113,7 @@ export default function Dashboard() {
         </p>
       )}
 
+      {/* === Profile Card === */}
       <div
         className="mechanic-card"
         style={{
@@ -127,64 +145,42 @@ export default function Dashboard() {
           {initials}
         </div>
 
-        <label>
-          <strong>Name:</strong>
-          <input
-            name="name"
-            value={profile.name || ""}
-            onChange={handleChange}
-            className="profile-input"
-          />
-        </label>
-        <label>
-          <strong>Email:</strong>
-          <input
-            name="email"
-            value={profile.email || ""}
-            onChange={handleChange}
-            className="profile-input"
-          />
-        </label>
-        <label>
-          <strong>Specialty:</strong>
-          <input
-            name="specialty"
-            value={profile.specialty || ""}
-            onChange={handleChange}
-            className="profile-input"
-          />
-        </label>
-        <label>
-          <strong>Phone:</strong>{" "}
-          <span>{profile.phone || "— not provided —"}</span>
-        </label>
+        <input
+          name="name"
+          value={profile.name}
+          onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+        />
+        <input
+          name="email"
+          value={profile.email}
+          onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+        />
+        <input
+          name="specialty"
+          value={profile.specialty}
+          onChange={(e) =>
+            setProfile({ ...profile, specialty: e.target.value })
+          }
+        />
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <button onClick={handleSave}>Save</button>
+          <button onClick={handleSaveProfile}>Save Profile</button>
           <button
             style={{ backgroundColor: "crimson", color: "white" }}
             onClick={handleDeleteMechanic}
           >
-            Delete
+            Delete Account
           </button>
         </div>
-
-        <textarea
-          value={note}
-          onChange={handleNoteChange}
-          placeholder="Write a short note (local only)..."
-          style={{
-            width: "100%",
-            marginTop: "1rem",
-            borderRadius: "8px",
-            padding: "0.5rem",
-            minHeight: "60px",
-          }}
-        />
       </div>
 
+      {/* === Ticket Section === */}
       <section style={{ marginTop: "2rem", width: "100%" }}>
-        <h2>🧾 Your Service Tickets</h2>
+        <h2>🧾 My Tickets</h2>
+        <button onClick={loadData} style={{ marginBottom: "1rem" }}>
+          Refresh
+        </button>
+
         {tickets.length > 0 ? (
           <div className="card-grid">
             {tickets.map((t) => (
@@ -193,6 +189,18 @@ export default function Dashboard() {
                 <p>{t.description}</p>
                 <p>Status: {t.status}</p>
                 <p>Customer ID: {t.customer_id}</p>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <button onClick={() => handleViewTicket(t.id)}>View</button>
+                  <button onClick={() => handleUpdateTicket(t.id)}>
+                    Update
+                  </button>
+                  <button
+                    style={{ backgroundColor: "crimson", color: "white" }}
+                    onClick={() => handleDeleteTicket(t.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
