@@ -7,39 +7,39 @@ const NavBar = () => {
   const { token, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "Light");
   const [openCount, setOpenCount] = useState(0);
 
-  const applyTheme = useCallback(
-    (t) => document.documentElement.setAttribute("data-theme", t),
-    []
-  );
+  const applyTheme = useCallback((t) => {
+    document.documentElement.setAttribute("data-theme", t);
+  }, []);
+
   useEffect(() => applyTheme(theme), [theme, applyTheme]);
 
   const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
+    const next = theme === "Light" ? "dark" : "Light";
     setTheme(next);
     localStorage.setItem("theme", next);
     applyTheme(next);
   };
 
   const asArray = useMemo(
-    () => (res) => Array.isArray(res) ? res : res?.data || res?.tickets || [],
+    () => (res) => Array.isArray(res) ? res : res?.tickets || res?.data || [],
     []
   );
 
   const refreshBadge = useCallback(async () => {
     try {
-      const res = await ticketAPI.getAll(); // POST enforced in api.js
+      const res = await ticketAPI.getAll(token); // requires token for full data
       const arr = asArray(res);
       const open = arr.filter(
-        (t) => String(t.status || "Open").toLowerCase() !== "closed"
+        (t) => String(t.status || "open").toLowerCase() !== "closed"
       ).length;
       setOpenCount(open || 0);
     } catch {
       setOpenCount(0);
     }
-  }, [asArray]);
+  }, [asArray, token]);
 
   useEffect(() => {
     if (!token) {

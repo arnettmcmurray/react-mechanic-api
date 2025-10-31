@@ -10,27 +10,35 @@ export default function Tickets() {
 
   useEffect(() => {
     if (!token) return;
+
     const fetchTickets = async () => {
       try {
         const res = await ticketAPI.getAll(token);
-        console.log("Tickets fetched:", res.data);
-        if (Array.isArray(res.data)) setTickets(res.data);
-        else if (res.data?.tickets) setTickets(res.data.tickets);
-        else setTickets([]);
+        console.log("Tickets fetched:", res);
+
+        const list = Array.isArray(res) ? res : res?.tickets || res?.data || [];
+
+        setTickets(list);
       } catch (err) {
         console.error("Error fetching tickets:", err);
         setError("Failed to load service tickets.");
       }
     };
+
     fetchTickets();
   }, [token]);
 
   if (!token) return <p style={{ padding: "2rem" }}>Please log in first.</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (error)
+    return (
+      <p style={{ color: "red", textAlign: "center", marginTop: "2rem" }}>
+        {error}
+      </p>
+    );
 
   return (
     <div className="view-container">
-      <h1>📋 All Service Tickets</h1>
+      <h1>🧾 All Service Tickets</h1>
       {tickets.length === 0 ? (
         <p>No service tickets found.</p>
       ) : (
@@ -47,10 +55,13 @@ export default function Tickets() {
                 <strong>Status:</strong> {t.status}
               </p>
               <p>
-                <strong>Customer:</strong> {t.customer_id}
+                <strong>Customer ID:</strong> {t.customer_id}
               </p>
               <p>
-                <strong>Mechanic:</strong> {t.mechanic_id || "Unassigned"}
+                <strong>Mechanics:</strong>{" "}
+                {Array.isArray(t.mechanics)
+                  ? t.mechanics.map((m) => m.name).join(", ")
+                  : "Unassigned"}
               </p>
             </div>
           ))}
